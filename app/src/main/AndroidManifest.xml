@@ -42,6 +42,10 @@
             android:name=".LvActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
+        <activity
+            android:name=".ProgressActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Catwalk" />
     </application>
 
 </manifest>

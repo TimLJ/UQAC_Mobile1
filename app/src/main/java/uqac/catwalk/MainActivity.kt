@@ -1,10 +1,13 @@
 package uqac.catwalk
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,10 +21,15 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Divider
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +54,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("Range")
 @Composable
 fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -65,9 +74,10 @@ fun MainContent(modifier: Modifier = Modifier) {
                 contentDescription = "Go to Lv Activity"
             )
         }
+
         
         Text(
-            text = "Welcome to Catwalk!",
+            text = "Fond de la maison des chats",
             modifier = Modifier.align(Alignment.Center)
         )
 
@@ -76,70 +86,91 @@ fun MainContent(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(1f / 8f)
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .fillMaxHeight(1f / 9f)
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            // Shop button
-            Button(
-                onClick = {
-                    val intent = Intent(context, ShopActivity::class.java)
-                    context.startActivity(intent)
-                },
+            // Shop section
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp)
+                    .fillMaxHeight()
+                    .clickable {
+                        val intent = Intent(context, ShopActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ShoppingCart,
-                        contentDescription = "Shop"
+                        contentDescription = "Shop",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Shop")
+                    Text("Shop", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
-            // Cat button
-            Button(
-                onClick = {
-                    val intent = Intent(context, CatActivity::class.java)
-                    context.startActivity(intent)
-                },
+            VerticalDivider(
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                thickness = 1.dp,
+                modifier = Modifier
+                    .fillMaxHeight()
+            )
+
+            // Cat section
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp)
+                    .fillMaxHeight()
+                    .clickable {
+                        val intent = Intent(context, CatActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Face,
-                        contentDescription = "Cat"
+                        contentDescription = "Cat",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Cat")
+                    Text("Cat", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
-            // Walk button
-            Button(
-                onClick = {
-                    val intent = Intent(context, WalkActivity::class.java)
-                    context.startActivity(intent)
-                },
+            VerticalDivider(
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                thickness = 1.dp,
+                modifier = Modifier
+                    .fillMaxHeight()
+            )
+
+            // Walk section
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp)
+                    .fillMaxHeight()
+                    .clickable {
+                        val intent = Intent(context, ProgressActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
-                        contentDescription = "Walk"
+                        contentDescription = "Walk",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Walk")
+                    Text("Walk", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
