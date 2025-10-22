@@ -5,8 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
@@ -30,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,14 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.ui.theme.CatwalkTheme
 
-class CatActivity : ComponentActivity() {
+class AchievementsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CatContent(
+                    LvContent(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -56,17 +51,16 @@ class CatActivity : ComponentActivity() {
 }
 
 @Composable
-fun CatContent(modifier: Modifier = Modifier) {
+fun LvContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    // Liste des noms de chats (36 noms pour remplir la grille 3x12)
-    val catNames = listOf(
-        "Minou", "Whiskers", "Shadow", "Luna", "Felix", "Mittens",
-        "Smokey", "Tiger", "Princess", "Max", "Bella", "Charlie",
-        "Lucy", "Oliver", "Lily", "Leo", "Chloe", "Milo",
-        "Sophie", "Jack", "Molly", "Oscar", "Daisy", "Simba",
-        "Coco", "Buddy", "Ruby", "Toby", "Zoe", "Sam",
-        "Nala", "Ginger", "Patches", "Oreo", "Snowball", "Jasper"
+    // Liste des niveaux (15 pour l'exemple)
+    val levels = listOf(
+        "Niveau 1 - Débutant", "Niveau 2 - Novice", "Niveau 3 - Apprenti",
+        "Niveau 4 - Intermédiaire", "Niveau 5 - Avancé", "Niveau 6 - Expert",
+        "Niveau 7 - Maître", "Niveau 8 - Grand Maître", "Niveau 9 - Légende",
+        "Niveau 10 - Mythique", "Niveau 11 - Divin", "Niveau 12 - Transcendant",
+        "Niveau 13 - Éternel", "Niveau 14 - Infini", "Niveau 15 - Ultime"
     )
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -86,14 +80,14 @@ fun CatContent(modifier: Modifier = Modifier) {
             )
         }
 
-        // Grillage de chats
+        // Liste scrollable des niveaux
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 80.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
             Text(
-                text = "Nos Chats 🐱",
+                text = "Progression des Niveaux ",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -102,15 +96,13 @@ fun CatContent(modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(catNames) { catName ->
+                items(levels) { level ->
                     Card(
                         modifier = Modifier
-                            .height(80.dp)
+                            .height(120.dp)
                             .fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -122,9 +114,9 @@ fun CatContent(modifier: Modifier = Modifier) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = catName,
+                                text = level,
                                 textAlign = TextAlign.Center,
-                                fontSize = 14.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -138,8 +130,8 @@ fun CatContent(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun CatContentPreview() {
+fun LvContentPreview() {
     CatwalkTheme {
-        CatContent()
+        LvContent()
     }
 }

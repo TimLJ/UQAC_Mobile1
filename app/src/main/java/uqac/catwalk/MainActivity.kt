@@ -21,15 +21,12 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.Divider
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,7 +59,7 @@ fun MainContent(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         Button(
             onClick = {
-                val intent = Intent(context, LvActivity::class.java)
+                val intent = Intent(context, AchievementsActivity::class.java)
                 context.startActivity(intent)
             },
             modifier = Modifier
@@ -127,7 +124,7 @@ fun MainContent(modifier: Modifier = Modifier) {
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable {
-                        val intent = Intent(context, CatActivity::class.java)
+                        val intent = Intent(context, CatListActivity::class.java)
                         context.startActivity(intent)
                     },
                 contentAlignment = Alignment.Center
@@ -157,7 +154,7 @@ fun MainContent(modifier: Modifier = Modifier) {
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable {
-                        val intent = Intent(context, ProgressActivity::class.java)
+                        val intent = Intent(context, WalkActivity::class.java)
                         context.startActivity(intent)
                     },
                 contentAlignment = Alignment.Center
