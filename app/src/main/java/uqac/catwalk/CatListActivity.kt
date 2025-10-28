@@ -8,10 +8,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -28,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,71 +72,91 @@ fun CatContent(modifier: Modifier = Modifier) {
         "Nala", "Ginger", "Patches", "Oreo", "Snowball", "Jasper"
     )
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Bouton Home en haut à gauche
-        Button(
-            onClick = {
-                val intent = Intent(context, MainActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Home,
-                contentDescription = "Retour à l'accueil"
-            )
-        }
-
-        // Grillage de chats
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 80.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
-        ) {
-            Text(
-                text = "Nos Chats 🐱",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                coinAmount = 56.toString(),
+                context = context,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                textAlign = TextAlign.Center
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .height(80.dp)
             )
+        },
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        content = { paddingValues ->
+            Box(
+                modifier = modifier
+                    .padding(
+                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                        top = 80.dp,
+                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                        bottom = 100.dp
+                    )
+                    .fillMaxSize()
             ) {
-                items(catNames) { catName ->
-                    Card(
+                // Grillage de chats
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 16.dp)
+                ) {
+                    Text(
+                        text = "Nos Chats 🐱",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .height(80.dp)
-                            .fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            .fillMaxWidth()
+                            .padding(
+                                top = 16.dp,
+                                bottom = 16.dp
+                            ),
+                        textAlign = TextAlign.Center
+                    )
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = catName,
-                                textAlign = TextAlign.Center,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                        items(catNames) { catName ->
+                            Card(
+                                modifier = Modifier
+                                    .padding(bottom = 10.dp)
+                                    .height(80.dp)
+                                    .fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = catName,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+        },
+
+        bottomBar = {
+            AppBottomBar(
+                context = context,
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .height(100.dp)
+            )
         }
-    }
+    )
 }
 
 @Preview(showBackground = true)
