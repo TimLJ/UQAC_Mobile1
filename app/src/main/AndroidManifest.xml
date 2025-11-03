@@ -46,6 +46,11 @@
             android:name=".WalkActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
+
+        <activity
+            android:name=".CatInteractionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Catwalk" />
     </application>
 
 </manifest>
