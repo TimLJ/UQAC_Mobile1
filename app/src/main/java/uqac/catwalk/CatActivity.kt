@@ -1,3 +1,4 @@
+// Kotlin
 package uqac.catwalk
 
 import android.content.Intent
@@ -7,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,7 +113,12 @@ fun CatContent(modifier: Modifier = Modifier) {
                     Card(
                         modifier = Modifier
                             .height(80.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .clickable {
+                                val intent = Intent(context, CatInteractionActivity::class.java)
+                                intent.putExtra("catName", catName)
+                                context.startActivity(intent)
+                            },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
