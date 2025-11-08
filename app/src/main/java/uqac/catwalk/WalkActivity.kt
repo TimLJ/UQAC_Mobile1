@@ -5,30 +5,35 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.ui.theme.CatwalkTheme
+import kotlin.random.Random
 
 class WalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +42,7 @@ class WalkActivity : ComponentActivity() {
         setContent {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WalkContent(
+                    ProgressContent(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -47,50 +52,60 @@ class WalkActivity : ComponentActivity() {
 }
 
 @Composable
-fun WalkContent(modifier: Modifier = Modifier) {
+fun ProgressContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val progress by remember { mutableIntStateOf(Random.nextInt(4000, 10001)) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp,16.dp,16.dp,0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
+        // Text
         Text(
-            text = "Résumé de la ballade",
+            text = "Ballade en cours...",
+            fontSize = 24.sp,
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            textAlign = TextAlign.Center
         )
 
-        // Pas
+        // Temporary image (using launcher icon as placeholder)
+        Image(
+            painter = painterResource(id = android.R.drawable.ic_dialog_info),
+            contentDescription = "Image temporaire",
+            modifier = Modifier.size(150.dp)
+        )
+
+        // Progress bar
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Marché ${(progress)} pas",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            LinearProgressIndicator(
+            progress = { progress/10000.toFloat() },
+            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp),
+            color = ProgressIndicatorDefaults.linearColor,
+            trackColor = ProgressIndicatorDefaults.linearTrackColor,
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            )
+        }
         Text(
-            text = "Pas: 1,234",
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary
+            text="Prochain objectif à 10 000 pas",
         )
 
-        // Pièces
-        Text(
-            text = "Pièces: 56",
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
-        // Temps
-        Text(
-            text = "Temps: 15:30",
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.tertiary
-        )
-
-        // Bouton de retour
+        // Stop button
         Button(
             onClick = {
-                val intent = Intent(context, MainActivity::class.java)
+                val intent = Intent(context, EndWalkActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             },
@@ -99,19 +114,15 @@ fun WalkContent(modifier: Modifier = Modifier) {
                 .width(200.dp)
                 .height(60.dp),
         ) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Retour"
-            )
-            Text(text = "Retour", fontSize = 18.sp)
+            Text(text = "STOP", fontSize = 18.sp)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun WalkContentPreview() {
+fun ProgressContentPreview() {
     CatwalkTheme {
-        WalkContent()
+        ProgressContent()
     }
 }

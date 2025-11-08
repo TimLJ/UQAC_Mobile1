@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".WalkActivity"
+            android:name=".EndWalkActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
@@ -31,7 +31,7 @@
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
-            android:name=".CatActivity"
+            android:name=".CatListActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
@@ -39,11 +39,11 @@
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
-            android:name=".LvActivity"
+            android:name=".AchievementsActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
-            android:name=".ProgressActivity"
+            android:name=".WalkActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
     </application>
