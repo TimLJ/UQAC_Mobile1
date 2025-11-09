@@ -236,31 +236,36 @@ fun LvContent(modifier: Modifier = Modifier) {
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = achievement.name,
-                                        textAlign = TextAlign.Center,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                    Text(
-                                        text = achievement.description,
-                                        textAlign = TextAlign.Center,
-                                    )
-                                    Text(
-                                        text = when {
-                                            achievement.obtenu -> "✅ Obtenu"
-                                            achievement.débloqué -> "🔓 Disponible"
-                                            else -> "🔒 Verrouillé"
-                                        },
-                                        textAlign = TextAlign.Center,
-                                        color = when {
-                                            achievement.obtenu -> Color.Green
-                                            achievement.débloqué -> Color.Blue
-                                            else -> Color.Gray
-                                        },
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = achievement.name,
+                                                textAlign = TextAlign.Center,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.padding(8.dp)
+                                            )
+                                            Text(
+                                                text = achievement.description,
+                                                textAlign = TextAlign.Center,
+                                            )
+                                        }
+                                        Text(
+                                            text = when {
+                                                achievement.obtenu -> "✅ Obtenu"
+                                                achievement.débloqué -> "🔓 Disponible"
+                                                else -> "🔒 Verrouillé"
+                                            },
+                                            textAlign = TextAlign.Center,
+                                            color = when {
+                                                achievement.obtenu -> Color.Green
+                                                achievement.débloqué -> Color.Blue
+                                                else -> Color.Gray
+                                            },
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
