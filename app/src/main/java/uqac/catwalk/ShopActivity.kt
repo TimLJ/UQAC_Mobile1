@@ -35,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class ShopActivity : ComponentActivity() {
@@ -66,15 +69,17 @@ class ShopActivity : ComponentActivity() {
 @Composable
 fun ShopContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-
+    val database = AppDatabase.getDatabase(context = context)
+    val itemDao = database.ItemDao()
+    val items by itemDao.getAllItems().collectAsState(initial = emptyList())
     // Liste des articles de magasin (15 pour l'exemple)
-    val shopItems = listOf(
-        "Croquettes Premium", "Jouet Souris", "Griffoir Deluxe",
-        "Panier Confort", "Collier Élégant", "Brosse Poils Longs",
-        "Fontaine à Eau", "Arbre à Chat", "Coussin Chauffant",
-        "Jouet Plume", "Litière Bio", "Distributeur Croquettes",
-        "Tunnel de Jeu", "Herbe à Chat", "Sac de Transport"
-    )
+//    val shopItems = listOf(
+//        "Croquettes Premium", "Jouet Souris", "Griffoir Deluxe",
+//        "Panier Confort", "Collier Élégant", "Brosse Poils Longs",
+//        "Fontaine à Eau", "Arbre à Chat", "Coussin Chauffant",
+//        "Jouet Plume", "Litière Bio", "Distributeur Croquettes",
+//        "Tunnel de Jeu", "Herbe à Chat", "Sac de Transport"
+//    )
 
     Scaffold(
         topBar = {
@@ -121,7 +126,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(shopItems) { item ->
+                        items(items) { item ->
                             Card(
                                 modifier = Modifier
                                     .padding(bottom = 10.dp)
@@ -140,7 +145,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = item,
+                                        text = item.name,
                                         textAlign = TextAlign.Start,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium,
@@ -152,11 +157,18 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                         modifier = Modifier
                                             .width(80.dp)
                                     ) {
-                                        Icon(
+                                        if (item.level<=2){
+                                            Icon(
                                             imageVector = Icons.Filled.ShoppingCart,
                                             contentDescription = "Ajouter au panier",
                                             modifier = Modifier.size(40.dp)
-                                        )
+                                            )
+                                            Text(
+                                                text = item.price.toString(),
+                                                textAlign = TextAlign.Center,
+                                                fontSize = 18.sp,
+                                            )
+                                        }
                                     }
                                 }
                             }

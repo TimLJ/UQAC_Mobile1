@@ -14,4 +14,6 @@ interface AchievementDao {
 
     @Query("SELECT * FROM achievements")
     fun getAllAchievements(): Flow<List<Achievement>>
+
+
 }

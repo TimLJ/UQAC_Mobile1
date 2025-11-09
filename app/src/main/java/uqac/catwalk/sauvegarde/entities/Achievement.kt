@@ -10,4 +10,5 @@ data class Achievement(
     val name: String,
     val description: String,
     var obtenu: Boolean = false,
+    val débloqué: Boolean = false,
 )

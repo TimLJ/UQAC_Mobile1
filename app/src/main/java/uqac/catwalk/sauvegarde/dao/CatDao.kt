@@ -21,4 +21,7 @@ interface CatDao {
 
     @Query("SELECT * FROM cats WHERE id = :id")
     fun getCatById(id: Int): Flow<Cat>
+
+    @Query("SELECT * FROM cats WHERE obtenu = true")
+    fun getDébloqués(): Flow<List<Cat>>
 }

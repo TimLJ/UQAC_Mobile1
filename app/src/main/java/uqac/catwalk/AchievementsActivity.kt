@@ -40,6 +40,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -53,6 +55,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.entities.Achievement
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class AchievementsActivity : ComponentActivity() {
@@ -161,13 +165,16 @@ fun AppTopBar(coinAmount: String,
 fun LvContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     // Liste des niveaux (15 pour l'exemple)
-    val levels = listOf(
-        "Niveau 1 - Débutant", "Niveau 2 - Novice", "Niveau 3 - Apprenti",
-        "Niveau 4 - Intermédiaire", "Niveau 5 - Avancé", "Niveau 6 - Expert",
-        "Niveau 7 - Maître", "Niveau 8 - Grand Maître", "Niveau 9 - Légende",
-        "Niveau 10 - Mythique", "Niveau 11 - Divin", "Niveau 12 - Transcendant",
-        "Niveau 13 - Éternel", "Niveau 14 - Infini", "Niveau 15 - Ultime"
-    )
+    val database = AppDatabase.getDatabase(context = context)
+    val AchievementDao = database.AchievementDao()
+    val achievements by AchievementDao.getAllAchievements().collectAsState(initial = emptyList())
+//    val levels = listOf(
+//        "Niveau 1 - Débutant", "Niveau 2 - Novice", "Niveau 3 - Apprenti",
+//        "Niveau 4 - Intermédiaire", "Niveau 5 - Avancé", "Niveau 6 - Expert",
+//        "Niveau 7 - Maître", "Niveau 8 - Grand Maître", "Niveau 9 - Légende",
+//        "Niveau 10 - Mythique", "Niveau 11 - Divin", "Niveau 12 - Transcendant",
+//        "Niveau 13 - Éternel", "Niveau 14 - Infini", "Niveau 15 - Ultime"
+//    )
 
     Scaffold (
         topBar = {
@@ -214,7 +221,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(levels) { level ->
+                        items(achievements) { achievement ->
                             Card(
                                 modifier = Modifier
                                     .padding(bottom = 10.dp)
@@ -230,11 +237,29 @@ fun LvContent(modifier: Modifier = Modifier) {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = level,
+                                        text = achievement.name,
                                         textAlign = TextAlign.Center,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Text(
+                                        text = achievement.description,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Text(
+                                        text = when {
+                                            achievement.obtenu -> "✅ Obtenu"
+                                            achievement.débloqué -> "🔓 Disponible"
+                                            else -> "🔒 Verrouillé"
+                                        },
+                                        textAlign = TextAlign.Center,
+                                        color = when {
+                                            achievement.obtenu -> Color.Green
+                                            achievement.débloqué -> Color.Blue
+                                            else -> Color.Gray
+                                        },
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
