@@ -125,7 +125,7 @@ fun CatContent(modifier: Modifier = Modifier) {
                                     .fillMaxWidth()
                                     .clickable {
                                         val intent = Intent(context, CatInteractionActivity::class.java)
-                                        intent.putExtra("catName", catName)
+                                        intent.putExtra("catName", cat.name)
                                         context.startActivity(intent)
                                     },
                                 colors = CardDefaults.cardColors(
