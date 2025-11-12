@@ -24,4 +24,22 @@ interface CatDao {
 
     @Query("SELECT * FROM cats WHERE obtenu = true")
     fun getDébloqués(): Flow<List<Cat>>
+
+    @Query("UPDATE cats SET name = :name WHERE id = :id")
+    suspend fun updateCatName(id: Int, name: String)
+
+    @Query("UPDATE cats SET happiness = :happiness WHERE id = :id")
+    suspend fun updateCatHappiness(id: Int, happiness: Int)
+
+    @Query("UPDATE cats SET cleanliness = :cleanliness WHERE id = :id")
+    suspend fun updateCatCleanliness(id: Int, cleanliness: Int)
+
+    @Query("UPDATE cats SET affection = :affection WHERE id = :id")
+    suspend fun updateCatAffection(id: Int, affection: Double)
+
+    @Query("UPDATE cats SET achievementId = :achievementId WHERE id = :id")
+    suspend fun updateCatAchievementId(id: Int, achievementId: Int?)
+
+    @Query("UPDATE cats SET obtenu = :obtenu WHERE id = :id")
+    suspend fun updateCatObtenu(id: Int, obtenu: Boolean)
 }

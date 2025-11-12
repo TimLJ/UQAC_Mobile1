@@ -1,22 +1,17 @@
-// kotlin
 package uqac.catwalk
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
@@ -31,34 +26,69 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.theme.CatwalkTheme
+import androidx.compose.foundation.layout.padding
+import uqac.catwalk.sauvegarde.AppDatabase
+import kotlin.math.min
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+
+// Dans CatInteractionActivity.kt
 
 class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        val catName = intent?.getStringExtra("catName") ?: "Inconnu"
+
+        // 1. Récupérer l'ID depuis l'Intent
+        val catId = intent.getIntExtra("catID", -1) // Utilisez -1 ou une autre valeur par défaut invalide
+
+        // Sécurité : si l'ID est invalide, on ne peut rien faire.
+        if (catId == -1) {
+            // Gérer l'erreur : fermer l'activité, afficher un message, etc.
+            finish()
+            return
+        }
+
         setContent {
             CatwalkTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CatInteractionContent(
-                        modifier = Modifier.padding(innerPadding),
-                        catName = catName
-                    )
+                // 2. Récupérer les données du chat depuis la BDD
+                val database = AppDatabase.getDatabase(context = this)
+                val catDao = database.CatDao()
+                // Idéalement, utilisez un ViewModel ici pour une meilleure architecture.
+                // findById devrait retourner un Flow pour des mises à jour en temps réel.
+                val cat by catDao.getCatById(catId).collectAsState(initial = null)
+
+                // 3. Afficher le contenu uniquement quand le chat est chargé
+                cat?.let { loadedCat ->
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        // Passez 'loadedCat' à vos Composables
+                        CatInteractionContent(
+                            cat = loadedCat,
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                } ?: run {
+                    // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        // CircularProgressIndicator()
+                    }
                 }
             }
         }
     }
 }
 
+
 @Composable
-fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
+fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
     val context = LocalContext.current
 
-    var proprete by remember { mutableStateOf(80) }
-    var amusement by remember { mutableStateOf(60) }
-    var affection by remember { mutableStateOf(2) }
+    // Créer une instance de catDao dans le composable
+    val database = AppDatabase.getDatabase(context)
+    val catDao = database.CatDao()
 
     Box(
         modifier = modifier
@@ -92,7 +122,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
         ) {
             // Nom du chat
             Text(
-                text = catName,
+                text = cat?.name ?: "Chat Inconnu",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -109,9 +139,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     .padding(top = 16.dp)
             ) {
                 repeat(3) { index ->
-                    val heartIcon = if (index < affection)
+                    val heartIcon = if (index < (cat?.affection ?: 0).toInt()) {
                         painterResource(R.drawable.ic_heart_full)
-                    else
+                    } else
                         painterResource(R.drawable.ic_heart_empty)
                     Image(
                         painter = heartIcon,
@@ -143,33 +173,32 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Propreté", fontWeight = FontWeight.Bold)
                     LinearProgressIndicator(
-                    progress = { proprete / 100f },
-                    modifier = Modifier
-                                                .width(130.dp)
-                                                .height(10.dp)
-                                                .padding(top = 4.dp),
-                    color = Color(0xFF4CAF50),
-                    trackColor = Color(0xFFC8E6C9),
-                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                        progress = {cat?.cleanliness?.div(100f) ?: 0f},
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(10.dp)
+                            .padding(top = 4.dp),
+                        color = Color(0xFF4CAF50),
+                        trackColor = Color(0xFFC8E6C9),
+                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Amusement", fontWeight = FontWeight.Bold)
                     LinearProgressIndicator(
-                    progress = { amusement / 100f },
-                    modifier = Modifier
-                                                .width(130.dp)
-                                                .height(10.dp)
-                                                .padding(top = 4.dp),
-                    color = Color(0xFFFF9800),
-                    trackColor = Color(0xFFFFE0B2),
-                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                        progress = { cat?.happiness?.div(100f) ?: 0f },
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(10.dp)
+                            .padding(top = 4.dp),
+                        color = Color(0xFFFF9800),
+                        trackColor = Color(0xFFFFE0B2),
+                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                     )
                 }
             }
 
             // Footer : boutons d’action
-            // kotlin
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,9 +211,21 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .clickable {
+                            cat?.let { nonNullCat ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    catDao.updateCatHappiness(
+                                        id = nonNullCat.id,
+                                        happiness = min(nonNullCat.happiness + 10, 100)
+                                    )
+                                }
+                            }
+                        },
                     contentAlignment = Alignment.Center
+
                 ) {
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center // centrer verticalement
@@ -210,7 +251,17 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .clickable {
+                            cat?.let { nonNullCat ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    catDao.updateCatCleanliness(
+                                        id = nonNullCat.id,
+                                        cleanliness = min(nonNullCat.cleanliness + 10, 100)
+                                    )
+                                }
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -238,7 +289,17 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .clickable {
+                            cat?.let { nonNullCat ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    catDao.updateCatAffection(
+                                        id = nonNullCat.id,
+                                        affection = min(nonNullCat.affection + 0.1, 3.0)
+                                    )
+                                }
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -260,14 +321,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     }
 }
 
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CatInteractionPreview() {
     CatwalkTheme {
         CatInteractionContent(
             modifier = Modifier,
-            catName = "Minou"
+            cat = null
         )
     }
 }
