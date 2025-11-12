@@ -1,0 +1,10 @@
+{
+  "player": {
+    "name": "PlayerName",
+    "level": 1,
+    "experience": 0,
+    "money": 100,
+    "TDistance": 0,
+    "DDistance": 0
+  }
+}
