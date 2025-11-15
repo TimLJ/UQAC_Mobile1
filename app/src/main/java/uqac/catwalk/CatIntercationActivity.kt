@@ -1,22 +1,16 @@
 // kotlin
 package uqac.catwalk
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
@@ -31,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class CatInteractionActivity : ComponentActivity() {
@@ -41,12 +34,7 @@ class CatInteractionActivity : ComponentActivity() {
         val catName = intent?.getStringExtra("catName") ?: "Inconnu"
         setContent {
             CatwalkTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CatInteractionContent(
-                        modifier = Modifier.padding(innerPadding),
-                        catName = catName
-                    )
-                }
+                CatInteractionContent(catName = catName)
             }
         }
     }
@@ -60,37 +48,29 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     var amusement by remember { mutableStateOf(60) }
     var affection by remember { mutableStateOf(2) }
 
-    Box(
+    Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFFFF))
-    ) {
-        // Bouton Home en haut à gauche
-        Button(
-            onClick = {
-                val intent = Intent(context, MainActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Home,
-                contentDescription = "Retour à l'accueil"
+            .background(Color(0xFFFFFFFF)),
+        topBar = {
+            AppTopBar(
+                coinAmount = 56.toString(),
+                context = context,
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .height(80.dp)
             )
         }
-
-        // Contenu principal
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .padding(top = 80.dp),
+                .padding(innerPadding)
+                .padding(top = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Nom du chat
             Text(
                 text = catName,
                 style = MaterialTheme.typography.headlineSmall,
@@ -101,7 +81,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 textAlign = TextAlign.Center
             )
 
-            // Barre d’affection (coeurs)
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
@@ -123,7 +102,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 }
             }
 
-            // Image du chat
             Image(
                 painter = painterResource(R.drawable.chat),
                 contentDescription = "Chat",
@@ -133,7 +111,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 contentScale = ContentScale.Crop
             )
 
-            // ⚡ Barres côte à côte
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
@@ -168,17 +145,14 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 }
             }
 
-            // Footer : boutons d’action
-            // kotlin
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(72.dp) // hauteur fixe et prévisible
+                    .height(72.dp)
                     .background(MaterialTheme.colorScheme.primary)
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                // Play section
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -187,7 +161,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center // centrer verticalement
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Star,
@@ -206,7 +180,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         .fillMaxHeight()
                 )
 
-                // wash section
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -234,7 +207,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         .fillMaxHeight()
                 )
 
-                // pet section
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -255,11 +227,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     }
                 }
             }
-
         }
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
