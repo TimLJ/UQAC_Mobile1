@@ -267,8 +267,6 @@ fun WashingOverlay(
     onPropreteChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
-    val context = LocalContext.current
-
     var proprete by remember { mutableStateOf(initialProprete) }
 
     // Position de l'éponge
