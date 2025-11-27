@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,9 +39,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -48,22 +54,43 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import uqac.catwalk.sauvegarde.PlayerData
+import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.ui.theme.CatwalkTheme
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import uqac.catwalk.sauvegarde.DataStoreManager
+import uqac.catwalk.sauvegarde.MsMoney
+import androidx.compose.runtime.getValue
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            CatwalkTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainContent(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+
+        // 1. Créer une instance de votre DataStoreManager
+        val dataStoreManager = DataStoreManager(applicationContext)
+
+        // 2. Lancer une coroutine pour charger les données de manière asynchrone
+        // On utilise lifecycleScope car onCreate n'est pas un composable
+        lifecycleScope.launch {
+            // 3. APPELER LA FONCTION ICI !
+            dataStoreManager.loadPlayerData()
+
+            // 4. Une fois les données chargées, on peut construire l'UI
+            setContent {
+                CatwalkTheme {
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        MainContent(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
                 }
             }
         }
@@ -74,10 +101,10 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
-    coinAmount: String,
     context: Context,
     modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = modifier
     ) {
@@ -118,7 +145,7 @@ fun MainTopBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = coinAmount,
+                        text = MsMoney.toString(),
                         textAlign = TextAlign.Center,
                         fontSize = 25.sp,
                         modifier = Modifier
@@ -127,7 +154,12 @@ fun MainTopBar(
                             .border(BorderStroke(2.dp, Color.Black))
                             .background(color = Color.Yellow)
                             .offset(x = 5.dp, y = 5.dp)
-
+                            .clickable {
+                                coroutineScope.launch {
+                                    updtMoney(-50, context)
+                                }
+                                Toast.makeText(context, "Retrait", Toast.LENGTH_SHORT).show()
+                            }
                     )
                     Image(
                         painter = painterResource(R.drawable.money_icon),
@@ -135,6 +167,12 @@ fun MainTopBar(
                         modifier = Modifier
                             .background(color = Color.White)
                             .size(50.dp)
+                            .clickable {
+                                coroutineScope.launch {
+                                    updtMoney(50, context)
+                                }
+                                Toast.makeText(context, "Ajout", Toast.LENGTH_SHORT).show()
+                            }
                     )
                 }
             }
@@ -253,11 +291,12 @@ fun AppBottomBar(
 fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
+    val Player by remember { mutableStateOf(PlayerData) }
+
     Scaffold(
         topBar = {
             MainTopBar(
-                56.toString(),
-                context,
+                context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .height(80.dp)

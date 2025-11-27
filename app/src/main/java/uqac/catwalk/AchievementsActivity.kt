@@ -42,6 +42,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -56,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.PlayerData
 import uqac.catwalk.sauvegarde.entities.Achievement
 import uqac.catwalk.ui.theme.CatwalkTheme
 
@@ -77,10 +80,11 @@ class AchievementsActivity : ComponentActivity() {
 
 // Top bar for every screen that is not the main screen
 @Composable
-fun AppTopBar(coinAmount: String,
-              context: Context,
+fun AppTopBar(context: Context,
               modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val Player by remember { mutableStateOf(PlayerData) }
     Box(
         modifier = modifier,
     ) {
@@ -136,7 +140,7 @@ fun AppTopBar(coinAmount: String,
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = coinAmount,
+                        text = Player.money.toString(),
                         textAlign = TextAlign.Center,
                         fontSize = 25.sp,
                         modifier = Modifier
@@ -179,7 +183,6 @@ fun LvContent(modifier: Modifier = Modifier) {
     Scaffold (
         topBar = {
             AppTopBar(
-                56.toString(),
                 context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)

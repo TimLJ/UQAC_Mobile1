@@ -84,7 +84,6 @@ fun ShopContent(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             AppTopBar(
-                coinAmount = 56.toString(),
                 context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
