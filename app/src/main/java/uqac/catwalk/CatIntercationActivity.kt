@@ -5,10 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -20,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -32,7 +36,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import uqac.catwalk.ui.theme.CatwalkTheme
+
+data class Heart(val id: Long, val x: Float, val y: Float)
 
 class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +64,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     var affection by remember { mutableIntStateOf(2) }
 
     var isWashing by remember { mutableStateOf(false) }
+    var isPetting by remember { mutableStateOf(false) } // <-- ajouter
 
     // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
@@ -117,13 +126,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     }
                 }
 
-                // Image du chat principale - on récupère ses bounds ici (fenêtre)
+                // Image du chat principale
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.chat),
+                        painter = painterResource(R.drawable.chat_roux),
                         contentDescription = "Chat",
                         modifier = Modifier
                             .size(300.dp)
@@ -239,10 +248,12 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                             .fillMaxHeight()
                     )
 
+                    // Caresser
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .clickable { isPetting = true },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -270,8 +281,44 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     onClose = { isWashing = false }
                 )
             }
+            // Overlay mode caresse
+            if (isPetting) {
+                PettingOverlay(
+                    catBounds = catBounds,
+                    onAffectionChange = { affection = (affection + it).coerceAtMost(100) },
+                    onClose = { isPetting = false }
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun HeartItem(
+    startX: Float,
+    startY: Float,
+    onFinished: (Long) -> Unit
+) {
+    val id = remember { System.nanoTime() }
+    val animY = remember { Animatable(0f) }
+    val animAlpha = remember { Animatable(1f) }
+    val heartSize = 200.dp
+
+    LaunchedEffect(Unit) {
+        animY.animateTo(-80f, animationSpec = tween(durationMillis = 700))
+        animAlpha.animateTo(0f, animationSpec = tween(durationMillis = 9300))
+        delay(100)
+        onFinished(id)
+    }
+
+    Image(
+        painter = painterResource(R.drawable.petits_coeurs),
+        contentDescription = "Cœur",
+        modifier = Modifier
+            .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
+            .size(heartSize)
+            .graphicsLayer { alpha = animAlpha.value }
+    )
 }
 
 @SuppressLint("MutableCollectionMutableState")
@@ -346,6 +393,111 @@ fun WashingOverlay(
         )
 
         // Bouton Terminer — en bas au centre
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 160.dp)
+        ) {
+            Text("Terminer")
+        }
+    }
+}
+
+@Composable
+fun PettingOverlay(
+    catBounds: Rect,
+    onAffectionChange: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var overlayPosX by remember { mutableFloatStateOf(0f) }
+    var overlayPosY by remember { mutableFloatStateOf(0f) }
+
+    val density = LocalDensity.current
+    val handSizePx = with(density) { 120.dp.toPx() }
+    var handX by remember { mutableFloatStateOf(50f) }
+    var handY by remember { mutableFloatStateOf(50f) }
+
+    // liste de coeurs à afficher
+    val hearts = remember { mutableStateListOf<Heart>() }
+
+    // cooldown pour éviter plusieurs ajouts trop rapides
+    var lastPetTime by remember { mutableLongStateOf(0L) }
+    val cooldownMs = 500L
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { layout ->
+                val pos = layout.positionInWindow()
+                overlayPosX = pos.x
+                overlayPosY = pos.y
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { tapOffset ->
+                    val windowX = tapOffset.x + overlayPosX
+                    val windowY = tapOffset.y + overlayPosY
+                    val now = System.currentTimeMillis()
+                    if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
+                        lastPetTime = now
+                        // positionner le coeur au dessus de la tête du chat (en coords overlay)
+                        val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                        val heartY = (catBounds.top) - overlayPosY - 40f
+                        hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                        onAffectionChange.invoke(1)
+                    }
+                }
+            }
+    ) {
+        // Main déplaçable (remplacée par une icône pour éviter une drawable manquante)
+        Icon(
+            imageVector = Icons.Filled.FavoriteBorder,
+            contentDescription = "Main",
+            tint = Color.Red,
+            modifier = Modifier
+                .size(64.dp)
+                .offset { IntOffset(handX.toInt(), handY.toInt()) }
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        handX += dragAmount.x
+                        handY += dragAmount.y
+
+                        // rectangle de la main en coords fenêtre
+                        val handRect = Rect(
+                            handX + overlayPosX,
+                            handY + overlayPosY,
+                            handX + overlayPosX + handSizePx,
+                            handY + overlayPosY + handSizePx
+                        )
+
+                        val now = System.currentTimeMillis()
+                        if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
+                            lastPetTime = now
+                            // créer coeur au dessus du chat
+                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                            val heartY = (catBounds.top) - overlayPosY - 40f
+                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                            onAffectionChange.invoke(1)
+                        }
+                    }
+                }
+        )
+
+        // Rendu des coeurs animés
+        hearts.forEach { heart ->
+            key(heart.id) {
+                HeartItem(
+                    startX = heart.x,
+                    startY = heart.y,
+                    onFinished = { finishedId ->
+                        hearts.removeAll { it.id == finishedId }
+                    }
+                )
+            }
+        }
+
+        // Bouton pour fermer
         Button(
             onClick = onClose,
             modifier = Modifier
