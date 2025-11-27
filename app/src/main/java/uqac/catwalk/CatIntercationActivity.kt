@@ -50,9 +50,9 @@ class CatInteractionActivity : ComponentActivity() {
 fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     val context = LocalContext.current
 
-    var proprete by remember { mutableStateOf(80) }
-    var amusement by remember { mutableStateOf(60) }
-    var affection by remember { mutableStateOf(2) }
+    var proprete by remember { mutableIntStateOf(80) }
+    var amusement by remember { mutableIntStateOf(60) }
+    var affection by remember { mutableIntStateOf(2) }
 
     var isWashing by remember { mutableStateOf(false) }
 
@@ -267,11 +267,11 @@ fun WashingOverlay(
     onPropreteChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
-    var proprete by remember { mutableStateOf(initialProprete) }
+    var proprete by remember { mutableIntStateOf(initialProprete) }
 
     // Position de l'éponge
-    var spongeX by remember { mutableStateOf(200f) }
-    var spongeY by remember { mutableStateOf(200f) }
+    var spongeX by remember { mutableFloatStateOf(200f) }
+    var spongeY by remember { mutableFloatStateOf(200f) }
 
     // Rectangle du chat
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
@@ -282,7 +282,7 @@ fun WashingOverlay(
             .background(Color(0xAA000000))
     ) {
 
-        // 🐱 Image du chat + récupération position
+        // Image du chat + récupération position
         Image(
             painter = painterResource(R.drawable.chat),
             contentDescription = "Chat",
@@ -300,7 +300,7 @@ fun WashingOverlay(
                 }
         )
 
-        // 🧽 Éponge draggable
+        // éponge
         Image(
             painter = painterResource(R.drawable.eponge),
             contentDescription = "Éponge",
@@ -331,7 +331,7 @@ fun WashingOverlay(
                 }
         )
 
-        // ❌ Bouton fermer
+        // Bouton fermer
         IconButton(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopEnd).padding(20.dp)
@@ -343,7 +343,7 @@ fun WashingOverlay(
             )
         }
 
-        // ✔️ Bouton Terminer — en bas au centre
+        // Bouton Terminer — en bas au centre
         Button(
             onClick = onClose,
             modifier = Modifier
