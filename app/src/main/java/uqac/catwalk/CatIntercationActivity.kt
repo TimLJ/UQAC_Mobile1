@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -26,6 +25,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import uqac.catwalk.ui.theme.CatwalkTheme
+
 class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +56,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     var affection by remember { mutableIntStateOf(2) }
 
     var isWashing by remember { mutableStateOf(false) }
+
+    // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
+    var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
 
     Scaffold(
         modifier = modifier
@@ -113,7 +117,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     }
                 }
 
-                // Image du chat principale
+                // Image du chat principale - on récupère ses bounds ici (fenêtre)
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -123,7 +127,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         contentDescription = "Chat",
                         modifier = Modifier
                             .size(300.dp)
-                            .padding(16.dp),
+                            .padding(16.dp)
+                            .onGloballyPositioned { layout ->
+                                val pos = layout.positionInWindow()
+                                catBounds = Rect(
+                                    pos.x,
+                                    pos.y,
+                                    pos.x + layout.size.width,
+                                    pos.y + layout.size.height
+                                )
+                            },
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
@@ -252,6 +265,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             if (isWashing) {
                 WashingOverlay(
                     initialProprete = proprete,
+                    catBounds = catBounds,
                     onPropreteChange = { proprete = it },
                     onClose = { isWashing = false }
                 )
@@ -264,43 +278,44 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
 @Composable
 fun WashingOverlay(
     initialProprete: Int,
+    catBounds: Rect,
     onPropreteChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
     var proprete by remember { mutableIntStateOf(initialProprete) }
 
-    // Position de l'éponge
-    var spongeX by remember { mutableFloatStateOf(200f) }
-    var spongeY by remember { mutableFloatStateOf(200f) }
+    // Position de l'éponge relative au coin supérieur gauche du parent
+    var spongeX by remember { mutableFloatStateOf(50f) }
+    var spongeY by remember { mutableFloatStateOf(50f) }
 
-    // Rectangle du chat
-    var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
+    // Position de l'overlay dans la fenêtre
+    var overlayPosX by remember { mutableFloatStateOf(0f) }
+    var overlayPosY by remember { mutableFloatStateOf(0f) }
 
+    val density = LocalDensity.current
+    val spongeSizePx = with(density) { 120.dp.toPx() }
+
+    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre l'éponge dessus
+    LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
+        if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
+            val catCenterX = catBounds.left + catBounds.width / 2f
+            val catCenterY = catBounds.top + catBounds.height / 2f
+            spongeX = catCenterX - overlayPosX - spongeSizePx / 2f
+            spongeY = catCenterY - overlayPosY - spongeSizePx / 2f
+        }
+    }
+
+    // Boîte transparente
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xAA000000))
+            .onGloballyPositioned { layout ->
+                val pos = layout.positionInWindow()
+                overlayPosX = pos.x
+                overlayPosY = pos.y
+            }
     ) {
-
-        // Image du chat + récupération position
-        Image(
-            painter = painterResource(R.drawable.chat),
-            contentDescription = "Chat",
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(300.dp)
-                .onGloballyPositioned { layout ->
-                    val pos = layout.positionInWindow()
-                    catBounds = Rect(
-                        pos.x,
-                        pos.y,
-                        pos.x + layout.size.width,
-                        pos.y + layout.size.height
-                    )
-                }
-        )
-
-        // éponge
+        // Éponge affichée au‑dessus, déplaçable
         Image(
             painter = painterResource(R.drawable.eponge),
             contentDescription = "Éponge",
@@ -309,21 +324,20 @@ fun WashingOverlay(
                 .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
                 .pointerInput(Unit) {
                     detectDragGestures { change, dragAmount ->
-
                         change.consume()
-
                         spongeX += dragAmount.x
                         spongeY += dragAmount.y
 
-                        // détection contact éponge/chat
-                        val spongeRect = Rect(
-                            spongeX,
-                            spongeY,
-                            spongeX + 120.dp.toPx(),
-                            spongeY + 120.dp.toPx()
+                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        val spongeRectWindow = Rect(
+                            spongeX + overlayPosX,
+                            spongeY + overlayPosY,
+                            spongeX + overlayPosX + spongeSizePx,
+                            spongeY + overlayPosY + spongeSizePx
                         )
 
-                        if (spongeRect.overlaps(catBounds)) {
+                        // détection contact éponge/chat en coordonnées fenêtre
+                        if (spongeRectWindow.overlaps(catBounds)) {
                             proprete = (proprete + 1).coerceAtMost(100)
                             onPropreteChange(proprete)
                         }
@@ -331,24 +345,12 @@ fun WashingOverlay(
                 }
         )
 
-        // Bouton fermer
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier.align(Alignment.TopEnd).padding(20.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                tint = Color.White,
-                contentDescription = "Fermer"
-            )
-        }
-
         // Bouton Terminer — en bas au centre
         Button(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 160.dp)
         ) {
             Text("Terminer")
         }
