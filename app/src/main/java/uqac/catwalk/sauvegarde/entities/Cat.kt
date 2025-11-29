@@ -1,9 +1,12 @@
 package uqac.catwalk.sauvegarde.entities
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "cats",
     foreignKeys = [ForeignKey(
         entity = Achievement::class,
@@ -20,4 +23,4 @@ data class Cat(
     var affection: Float,
     var achievementId: Int?, // Nullable in case the cat has no achievement
     val obtenu: Boolean,
-)
+) : Parcelable
