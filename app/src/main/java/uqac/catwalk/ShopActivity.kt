@@ -1,6 +1,5 @@
 package uqac.catwalk
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -87,7 +85,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                 context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .height(80.dp)
+                    .height(80.dp),
             )
         },
 

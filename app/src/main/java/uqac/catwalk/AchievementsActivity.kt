@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.PlayerData
-import uqac.catwalk.sauvegarde.entities.Achievement
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class AchievementsActivity : ComponentActivity() {
@@ -80,8 +79,9 @@ class AchievementsActivity : ComponentActivity() {
 
 // Top bar for every screen that is not the main screen
 @Composable
-fun AppTopBar(context: Context,
-              modifier: Modifier = Modifier
+fun AppTopBar(
+    context: Context,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val Player by remember { mutableStateOf(PlayerData) }
@@ -186,7 +186,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                 context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .height(80.dp)
+                    .height(80.dp),
             )
         },
 

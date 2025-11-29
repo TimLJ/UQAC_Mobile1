@@ -1,16 +1,20 @@
 // kotlin
 package uqac.catwalk
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -34,11 +38,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import uqac.catwalk.ui.theme.CatwalkTheme
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.graphicsLayer
 import uqac.catwalk.sauvegarde.AppDatabase
 import kotlin.math.min
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import uqac.catwalk.sauvegarde.entities.Cat
 
 
 // Dans CatInteractionActivity.kt
@@ -106,13 +113,12 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
     // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
 
-    Scaffold()(
+    Scaffold(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF)),
         topBar = {
             AppTopBar(
-                coinAmount = 56.toString(),
                 context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
@@ -120,6 +126,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
             )
         }
     ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .padding(innerPadding)
+                .padding(top = 8.dp)
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -148,7 +161,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
                     .padding(top = 16.dp)
             ) {
                 repeat(3) { index ->
-                    val heartIcon = if (index (cat?.affection ?: 0).toInt()) {
+                    val heartIcon = if (index < (cat?.affection ?: 0).toInt()) {
                         painterResource(R.drawable.ic_heart_full)
                     } else
                         painterResource(R.drawable.ic_heart_empty)
@@ -275,11 +288,11 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     catDao.updateCatCleanliness(
                                         id = nonNullCat.id,
-                                        cleanliness = min(nonNullCat.cleanliness + 10, 100),
-                                        isWashing = true
+                                        cleanliness = min(nonNullCat.cleanliness + 10, 100)
                                     )
                                 }
                             }
+                            isWashing = true
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -314,25 +327,26 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     catDao.updateCatAffection(
                                         id = nonNullCat.id,
-                                        affection = min(nonNullCat.affection + 0.1, 3.0),
-                                        isPetting = true
+                                        affection = min(nonNullCat.affection + 0.1, 3.0)
                                     )
                                 }
                             }
+                            isPetting = true
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.FavoriteBorder,
-                            contentDescription = "Caresser",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Caresser", color = MaterialTheme.colorScheme.onPrimary)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.FavoriteBorder,
+                                contentDescription = "Caresser",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Caresser", color = MaterialTheme.colorScheme.onPrimary)
+                        }
                     }
                 }
             }
@@ -354,6 +368,222 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
                     onClose = { isPetting = false }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun HeartItem(
+    startX: Float,
+    startY: Float,
+    onFinished: (Long) -> Unit
+) {
+    val id = remember { System.nanoTime() }
+    val animY = remember { Animatable(0f) }
+    val animAlpha = remember { Animatable(1f) }
+    val heartSize = 200.dp
+
+    LaunchedEffect(Unit) {
+        animY.animateTo(-80f, animationSpec = tween(durationMillis = 700))
+        animAlpha.animateTo(0f, animationSpec = tween(durationMillis = 9300))
+        delay(100)
+        onFinished(id)
+    }
+
+    Image(
+        painter = painterResource(R.drawable.petits_coeurs),
+        contentDescription = "Cœur",
+        modifier = Modifier
+            .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
+            .size(heartSize)
+            .graphicsLayer { alpha = animAlpha.value }
+    )
+}
+
+@SuppressLint("MutableCollectionMutableState")
+@Composable
+fun WashingOverlay(
+    initialProprete: Int,
+    catBounds: Rect,
+    onPropreteChange: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var proprete by remember { mutableIntStateOf(initialProprete) }
+
+    // Position de l'éponge relative au coin supérieur gauche du parent
+    var spongeX by remember { mutableFloatStateOf(50f) }
+    var spongeY by remember { mutableFloatStateOf(50f) }
+
+    // Position de l'overlay dans la fenêtre
+    var overlayPosX by remember { mutableFloatStateOf(0f) }
+    var overlayPosY by remember { mutableFloatStateOf(0f) }
+
+    val density = LocalDensity.current
+    val spongeSizePx = with(density) { 120.dp.toPx() }
+
+    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre l'éponge dessus
+    LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
+        if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
+            val catCenterX = catBounds.left + catBounds.width / 2f
+            val catCenterY = catBounds.top + catBounds.height / 2f
+            spongeX = catCenterX - overlayPosX - spongeSizePx / 2f
+            spongeY = catCenterY - overlayPosY - spongeSizePx / 2f
+        }
+    }
+
+    // Boîte transparente
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { layout ->
+                val pos = layout.positionInWindow()
+                overlayPosX = pos.x
+                overlayPosY = pos.y
+            }
+    ) {
+        // Éponge affichée au‑dessus, déplaçable
+        Image(
+            painter = painterResource(R.drawable.eponge),
+            contentDescription = "Éponge",
+            modifier = Modifier
+                .size(120.dp)
+                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        spongeX += dragAmount.x
+                        spongeY += dragAmount.y
+
+                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        val spongeRectWindow = Rect(
+                            spongeX + overlayPosX,
+                            spongeY + overlayPosY,
+                            spongeX + overlayPosX + spongeSizePx,
+                            spongeY + overlayPosY + spongeSizePx
+                        )
+
+                        // détection contact éponge/chat en coordonnées fenêtre
+                        if (spongeRectWindow.overlaps(catBounds)) {
+                            proprete = (proprete + 1).coerceAtMost(100)
+                            onPropreteChange(proprete)
+                        }
+                    }
+                }
+        )
+
+        // Bouton Terminer — en bas au centre
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 160.dp)
+        ) {
+            Text("Terminer")
+        }
+    }
+}
+
+@Composable
+fun PettingOverlay(
+    catBounds: Rect,
+    onAffectionChange: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var overlayPosX by remember { mutableFloatStateOf(0f) }
+    var overlayPosY by remember { mutableFloatStateOf(0f) }
+
+    val density = LocalDensity.current
+    val handSizePx = with(density) { 120.dp.toPx() }
+    var handX by remember { mutableFloatStateOf(50f) }
+    var handY by remember { mutableFloatStateOf(50f) }
+
+    // liste de coeurs à afficher
+    val hearts = remember { mutableStateListOf<Heart>() }
+
+    // cooldown pour éviter plusieurs ajouts trop rapides
+    var lastPetTime by remember { mutableLongStateOf(0L) }
+    val cooldownMs = 500L
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { layout ->
+                val pos = layout.positionInWindow()
+                overlayPosX = pos.x
+                overlayPosY = pos.y
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { tapOffset ->
+                    val windowX = tapOffset.x + overlayPosX
+                    val windowY = tapOffset.y + overlayPosY
+                    val now = System.currentTimeMillis()
+                    if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
+                        lastPetTime = now
+                        // positionner le coeur au dessus de la tête du chat (en coords overlay)
+                        val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                        val heartY = (catBounds.top) - overlayPosY - 40f
+                        hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                        onAffectionChange.invoke(1)
+                    }
+                }
+            }
+    ) {
+        // Main déplaçable (remplacée par une icône pour éviter une drawable manquante)
+        Icon(
+            imageVector = Icons.Filled.FavoriteBorder,
+            contentDescription = "Main",
+            tint = Color.Red,
+            modifier = Modifier
+                .size(64.dp)
+                .offset { IntOffset(handX.toInt(), handY.toInt()) }
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        handX += dragAmount.x
+                        handY += dragAmount.y
+
+                        // rectangle de la main en coords fenêtre
+                        val handRect = Rect(
+                            handX + overlayPosX,
+                            handY + overlayPosY,
+                            handX + overlayPosX + handSizePx,
+                            handY + overlayPosY + handSizePx
+                        )
+
+                        val now = System.currentTimeMillis()
+                        if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
+                            lastPetTime = now
+                            // créer coeur au dessus du chat
+                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                            val heartY = (catBounds.top) - overlayPosY - 40f
+                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                            onAffectionChange.invoke(1)
+                        }
+                    }
+                }
+        )
+
+        // Rendu des coeurs animés
+        hearts.forEach { heart ->
+            key(heart.id) {
+                HeartItem(
+                    startX = heart.x,
+                    startY = heart.y,
+                    onFinished = { finishedId ->
+                        hearts.removeAll { it.id == finishedId }
+                    }
+                )
+            }
+        }
+
+        // Bouton pour fermer
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 160.dp)
+        ) {
+            Text("Terminer")
         }
     }
 }
