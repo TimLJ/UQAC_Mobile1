@@ -75,7 +75,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             .background(Color(0xFFFFFFFF)),
         topBar = {
             AppTopBar(
-                coinAmount = 56.toString(),
                 context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
