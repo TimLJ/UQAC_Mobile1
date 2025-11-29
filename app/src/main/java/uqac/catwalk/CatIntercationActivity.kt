@@ -64,7 +64,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     var affection by remember { mutableIntStateOf(2) }
 
     var isWashing by remember { mutableStateOf(false) }
-    var isPetting by remember { mutableStateOf(false) } // <-- ajouter
+    var isPetting by remember { mutableStateOf(false) }
 
     // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
