@@ -1,6 +1,5 @@
 package uqac.catwalk
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -273,6 +272,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
 
             // Overlay mode lavage
             if (isWashing) {
+                isPetting = false
                 WashingOverlay(
                     initialProprete = proprete,
                     catBounds = catBounds,
@@ -282,9 +282,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             }
             // Overlay mode caresse
             if (isPetting) {
+                isWashing = false
                 PettingOverlay(
                     catBounds = catBounds,
-                    onAffectionChange = { affection = (affection + it).coerceAtMost(100) },
                     onClose = { isPetting = false }
                 )
             }
@@ -312,7 +312,7 @@ private fun HeartItem(
 
     Image(
         painter = painterResource(R.drawable.petits_coeurs),
-        contentDescription = "Cœur",
+        contentDescription = "Cœurs",
         modifier = Modifier
             .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
             .size(heartSize)
@@ -320,7 +320,7 @@ private fun HeartItem(
     )
 }
 
-@SuppressLint("MutableCollectionMutableState")
+// kotlin
 @Composable
 fun WashingOverlay(
     initialProprete: Int,
@@ -351,7 +351,7 @@ fun WashingOverlay(
         }
     }
 
-    // Boîte transparente
+    // Boîte transparente — capte taps et drags sur toute la zone
     Box(
         Modifier
             .fillMaxSize()
@@ -360,16 +360,39 @@ fun WashingOverlay(
                 overlayPosX = pos.x
                 overlayPosY = pos.y
             }
-    ) {
-        // Éponge affichée au‑dessus, déplaçable
-        Image(
-            painter = painterResource(R.drawable.eponge),
-            contentDescription = "Éponge",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+            .pointerInput(Unit) {
+                // positionne à l'appui et suit le doigt pendant le drag
+                detectTapGestures(
+                    onPress = { offset ->
+                        // offset est local au Box
+                        spongeX = offset.x - spongeSizePx / 2f
+                        spongeY = offset.y - spongeSizePx / 2f
+
+                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        val spongeRectWindow = Rect(
+                            spongeX + overlayPosX,
+                            spongeY + overlayPosY,
+                            spongeX + overlayPosX + spongeSizePx,
+                            spongeY + overlayPosY + spongeSizePx
+                        )
+
+                        if (spongeRectWindow.overlaps(catBounds)) {
+                            proprete = (proprete + 1).coerceAtMost(100)
+                            onPropreteChange(proprete)
+                        }
+
+                        tryAwaitRelease() // attend le release si nécessaire
+                    }
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        // centrer l'éponge sous le doigt au démarrage du drag
+                        spongeX = offset.x - spongeSizePx / 2f
+                        spongeY = offset.y - spongeSizePx / 2f
+                    },
+                    onDrag = { change, dragAmount ->
                         change.consume()
                         spongeX += dragAmount.x
                         spongeY += dragAmount.y
@@ -388,7 +411,16 @@ fun WashingOverlay(
                             onPropreteChange(proprete)
                         }
                     }
-                }
+                )
+            }
+    ) {
+        // Éponge affichée au‑dessus
+        Image(
+            painter = painterResource(R.drawable.eponge),
+            contentDescription = "Éponge",
+            modifier = Modifier
+                .size(120.dp)
+                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
         )
 
         // Bouton Terminer — en bas au centre
@@ -406,7 +438,6 @@ fun WashingOverlay(
 @Composable
 fun PettingOverlay(
     catBounds: Rect,
-    onAffectionChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
     var overlayPosX by remember { mutableFloatStateOf(0f) }
@@ -433,31 +464,35 @@ fun PettingOverlay(
                 overlayPosY = pos.y
             }
             .pointerInput(Unit) {
-                detectTapGestures { tapOffset ->
-                    val windowX = tapOffset.x + overlayPosX
-                    val windowY = tapOffset.y + overlayPosY
-                    val now = System.currentTimeMillis()
-                    if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
-                        lastPetTime = now
-                        // positionner le coeur au dessus de la tête du chat (en coords overlay)
-                        val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                        val heartY = (catBounds.top) - overlayPosY - 40f
-                        hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                        onAffectionChange.invoke(1)
+                // tap pour positionner la main et créer un coeur si sur le chat
+                detectTapGestures(
+                    onPress = { tapOffset ->
+                        val windowX = tapOffset.x + overlayPosX
+                        val windowY = tapOffset.y + overlayPosY
+                        val now = System.currentTimeMillis()
+                        // positionne la main centrée sous le doigt
+                        handX = tapOffset.x - handSizePx / 2f
+                        handY = tapOffset.y - handSizePx / 2f
+
+                        if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
+                            lastPetTime = now
+                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                            val heartY = (catBounds.top) - overlayPosY - 40f
+                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                        }
+
+                        tryAwaitRelease()
                     }
-                }
+                )
             }
-    ) {
-        // Main déplaçable (remplacée par une icône pour éviter une drawable manquante)
-        Icon(
-            imageVector = Icons.Filled.FavoriteBorder,
-            contentDescription = "Main",
-            tint = Color.Red,
-            modifier = Modifier
-                .size(64.dp)
-                .offset { IntOffset(handX.toInt(), handY.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+            .pointerInput(Unit) {
+                // drag pour suivre le doigt et générer des coeurs en collision
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        handX = offset.x - handSizePx / 2f
+                        handY = offset.y - handSizePx / 2f
+                    },
+                    onDrag = { change, dragAmount ->
                         change.consume()
                         handX += dragAmount.x
                         handY += dragAmount.y
@@ -473,14 +508,21 @@ fun PettingOverlay(
                         val now = System.currentTimeMillis()
                         if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
                             lastPetTime = now
-                            // créer coeur au dessus du chat
                             val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
                             val heartY = (catBounds.top) - overlayPosY - 40f
                             hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                            onAffectionChange.invoke(1)
                         }
                     }
-                }
+                )
+            }
+    ) {
+        // Main déplaçable affichée (positionnée par le Box pointerInput)
+        Image(
+            painter = painterResource(R.drawable.main),
+            contentDescription = "Main",
+            modifier = Modifier
+                .size(64.dp)
+                .offset { IntOffset(handX.toInt(), handY.toInt()) }
         )
 
         // Rendu des coeurs animés
@@ -507,6 +549,7 @@ fun PettingOverlay(
         }
     }
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
