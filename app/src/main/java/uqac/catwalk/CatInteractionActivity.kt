@@ -64,6 +64,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
 
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(false) }
 
     // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
@@ -190,10 +191,12 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
+                    // Bouton Jouer -> active le mode jeu
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .clickable { isPlaying = true },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -288,6 +291,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     onClose = { isPetting = false }
                 )
             }
+
+            // Overlay mode jeu
+            if (isPlaying) {
+                PlayingOverlay(
+                    initialAmusement = amusement,
+                    catBounds = catBounds,
+                    onAmusementChange = { amusement = it },
+                    onClose = { isPlaying = false }
+                )
+            }
         }
     }
 }
@@ -320,7 +333,6 @@ private fun HeartItem(
     )
 }
 
-// kotlin
 @Composable
 fun WashingOverlay(
     initialProprete: Int,
@@ -539,6 +551,120 @@ fun PettingOverlay(
         }
 
         // Bouton pour fermer
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 160.dp)
+        ) {
+            Text("Terminer")
+        }
+    }
+}
+
+@Composable
+fun PlayingOverlay(
+    initialAmusement: Int,
+    catBounds: Rect,
+    onAmusementChange: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var amusement by remember { mutableIntStateOf(initialAmusement) }
+
+    // Position du plumeau relative au coin supérieur gauche du parent
+    var toyX by remember { mutableFloatStateOf(50f) }
+    var toyY by remember { mutableFloatStateOf(50f) }
+
+    // Position de l'overlay dans la fenêtre
+    var overlayPosX by remember { mutableFloatStateOf(0f) }
+    var overlayPosY by remember { mutableFloatStateOf(0f) }
+
+    val density = LocalDensity.current
+    val toySizePx = with(density) { 120.dp.toPx() }
+
+    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre le plumeau dessus
+    LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
+        if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
+            val catCenterX = catBounds.left + catBounds.width / 2f
+            val catCenterY = catBounds.top + catBounds.height / 2f
+            toyX = catCenterX - overlayPosX - toySizePx / 2f
+            toyY = catCenterY - overlayPosY - toySizePx / 2f
+        }
+    }
+
+    // Boîte transparente — capte taps et drags sur toute la zone
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { layout ->
+                val pos = layout.positionInWindow()
+                overlayPosX = pos.x
+                overlayPosY = pos.y
+            }
+            .pointerInput(Unit) {
+                // positionne à l'appui et suit le doigt pendant le drag
+                detectTapGestures(
+                    onPress = { offset ->
+                        // offset est local au Box
+                        toyX = offset.x - toySizePx / 2f
+                        toyY = offset.y - toySizePx / 2f
+
+                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        val toyRectWindow = Rect(
+                            toyX + overlayPosX,
+                            toyY + overlayPosY,
+                            toyX + overlayPosX + toySizePx,
+                            toyY + overlayPosY + toySizePx
+                        )
+
+                        if (toyRectWindow.overlaps(catBounds)) {
+                            amusement = (amusement + 1).coerceAtMost(100)
+                            onAmusementChange(amusement)
+                        }
+
+                        tryAwaitRelease() // attend le release si nécessaire
+                    }
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        // centrer le plumeau sous le doigt au démarrage du drag
+                        toyX = offset.x - toySizePx / 2f
+                        toyY = offset.y - toySizePx / 2f
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        toyX += dragAmount.x
+                        toyY += dragAmount.y
+
+                        // convertit rectangle du plumeau en coordonnées fenêtre
+                        val toyRectWindow = Rect(
+                            toyX + overlayPosX,
+                            toyY + overlayPosY,
+                            toyX + overlayPosX + toySizePx,
+                            toyY + overlayPosY + toySizePx
+                        )
+
+                        // détection contact plumeau/chat en coordonnées fenêtre
+                        if (toyRectWindow.overlaps(catBounds)) {
+                            amusement = (amusement + 1).coerceAtMost(100)
+                            onAmusementChange(amusement)
+                        }
+                    }
+                )
+            }
+    ) {
+        // Plumeau affichée au‑dessus
+        Image(
+            painter = painterResource(R.drawable.plumeau),
+            contentDescription = "Plumeau",
+            modifier = Modifier
+                .size(120.dp)
+                .offset { IntOffset(toyX.toInt(), toyY.toInt()) }
+        )
+
+        // Bouton Terminer — en bas au centre
         Button(
             onClick = onClose,
             modifier = Modifier
