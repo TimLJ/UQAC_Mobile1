@@ -1,17 +1,16 @@
-// kotlin
 package uqac.catwalk
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -36,72 +35,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import uqac.catwalk.ui.theme.CatwalkTheme
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.graphicsLayer
-import uqac.catwalk.sauvegarde.AppDatabase
-import kotlin.math.min
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import uqac.catwalk.sauvegarde.entities.Cat
-
-
-// Dans CatInteractionActivity.kt
+import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
 
 class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 1. Récupérer l'ID depuis l'Intent
-        val catId = intent.getIntExtra("catID", -1) // Utilisez -1 ou une autre valeur par défaut invalide
-
-        // Sécurité : si l'ID est invalide, on ne peut rien faire.
-        if (catId == -1) {
-            // Gérer l'erreur : fermer l'activité, afficher un message, etc.
-            finish()
-            return
-        }
-
+        enableEdgeToEdge()
+        val catName = intent?.getStringExtra("catName") ?: "Inconnu"
         setContent {
             CatwalkTheme {
-                // 2. Récupérer les données du chat depuis la BDD
-                val database = AppDatabase.getDatabase(context = this)
-                val catDao = database.CatDao()
-                // Idéalement, utilisez un ViewModel ici pour une meilleure architecture.
-                // findById devrait retourner un Flow pour des mises à jour en temps réel.
-                val cat by catDao.getCatById(catId).collectAsState(initial = null)
-
-                // 3. Afficher le contenu uniquement quand le chat est chargé
-                cat?.let { loadedCat ->
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        // Passez 'loadedCat' à vos Composables
-                        CatInteractionContent(
-                            cat = loadedCat,
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                } ?: run {
-                    // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        // CircularProgressIndicator()
-                    }
-                }
+                CatInteractionContent(catName = catName)
             }
         }
     }
 }
 
 @Composable
-fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
+fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     val context = LocalContext.current
-
-    // Créer une instance de catDao dans le composable
-    val database = AppDatabase.getDatabase(context)
-    val catDao = database.CatDao()
 
     var proprete by remember { mutableIntStateOf(80) }
     var amusement by remember { mutableIntStateOf(60) }
@@ -126,215 +81,179 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .padding(innerPadding)
-                .padding(top = 8.dp)
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .padding(innerPadding)
+            .padding(top = 8.dp)
         ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .padding(innerPadding)
-                .padding(top = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Nom du chat
-            Text(
-                text = cat?.name ?: "Chat Inconnu",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textAlign = TextAlign.Center
-            )
-
-            // Barre d’affection (coeurs)
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                repeat(3) { index ->
-                    val heartIcon = if (index < (cat?.affection ?: 0).toInt()) {
-                        painterResource(R.drawable.ic_heart_full)
-                    } else
-                        painterResource(R.drawable.ic_heart_empty)
-                    Image(
-                        painter = heartIcon,
-                        contentDescription = "Cœur ${index + 1}",
-                        modifier = Modifier
-                            .size(36.dp)
-                            .padding(4.dp)
-                    )
-                }
-            }
-
-            // Image du chat
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-            Image(
-                painter = painterResource(R.drawable.chat_roux),
-                contentDescription = "Chat",
-                modifier = Modifier
-                    .size(300.dp)
-                    .padding(16.dp)
-                    .onGloballyPositioned { layout ->
-                    val pos = layout.positionInWindow()
-                    catBounds = Rect(
-                        pos.x,
-                        pos.y,
-                        pos.x + layout.size.width,
-                        pos.y + layout.size.height
-                    )
-                                          },
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                Text(
+                    text = catName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    textAlign = TextAlign.Center
                 )
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp)
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Propreté", fontWeight = FontWeight.Bold)
-                    LinearProgressIndicator(
-                    progress = {cat?.cleanliness?.div(100f) ?: 0f},
-                    modifier = Modifier
-                                                .width(130.dp)
-                                                .height(10.dp)
-                                                .padding(top = 4.dp),
-                    color = Color(0xFF4CAF50),
-                    trackColor = Color(0xFFC8E6C9),
-                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                    )
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Amusement", fontWeight = FontWeight.Bold)
-                    LinearProgressIndicator(
-                    progress = { cat?.happiness?.div(100f) ?: 0f },
-                    modifier = Modifier
-                                                .width(130.dp)
-                                                .height(10.dp)
-                                                .padding(top = 4.dp),
-                    color = Color(0xFFFF9800),
-                    trackColor = Color(0xFFFFE0B2),
-                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                    )
-                }
-            }
-
-                // Footer : boutons d’action
                 Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                // Play section
-                Box(
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                        cat?.let { nonNullCat ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                catDao.updateCatHappiness(
-                                    id = nonNullCat.id,
-                                    happiness = min(nonNullCat.happiness + 10, 100)
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    repeat(3) { index ->
+                        val heartIcon = if (index < affection)
+                            painterResource(R.drawable.ic_heart_full)
+                        else
+                            painterResource(R.drawable.ic_heart_empty)
+                        Image(
+                            painter = heartIcon,
+                            contentDescription = "Cœur ${index + 1}",
+                            modifier = Modifier
+                                .size(36.dp)
+                                .padding(4.dp)
+                        )
+                    }
+                }
+
+                // Image du chat principale
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.chat_roux),
+                        contentDescription = "Chat",
+                        modifier = Modifier
+                            .size(300.dp)
+                            .padding(16.dp)
+                            .onGloballyPositioned { layout ->
+                                val pos = layout.positionInWindow()
+                                catBounds = Rect(
+                                    pos.x,
+                                    pos.y,
+                                    pos.x + layout.size.width,
+                                    pos.y + layout.size.height
                                 )
-                            }
-                        }
-                    },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Jouer",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Jouer", color = MaterialTheme.colorScheme.onPrimary)
-                    }
+                            },
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
                 }
 
-                    VerticalDivider(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                        thickness = 1.dp,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                    )
-
-                Box(
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            cat?.let { nonNullCat ->
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    catDao.updateCatCleanliness(
-                                        id = nonNullCat.id,
-                                        cleanliness = min(nonNullCat.cleanliness + 10, 100)
-                                    )
-                                }
-                            }
-                            isWashing = true
-                        },
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Laver",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Propreté", fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(
+                        progress = { proprete / 100f },
+                        modifier = Modifier
+                                                        .width(130.dp)
+                                                        .height(10.dp)
+                                                        .padding(top = 4.dp),
+                        color = Color(0xFF4CAF50),
+                        trackColor = Color(0xFFC8E6C9),
+                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Laver", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Amusement", fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(
+                        progress = { amusement / 100f },
+                        modifier = Modifier
+                                                        .width(130.dp)
+                                                        .height(10.dp)
+                                                        .padding(top = 4.dp),
+                        color = Color(0xFFFF9800),
+                        trackColor = Color(0xFFFFE0B2),
+                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                        )
                     }
                 }
 
-                    VerticalDivider(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                        thickness = 1.dp,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                    )
-
-                // Caresser
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
                     Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            cat?.let { nonNullCat ->
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    catDao.updateCatAffection(
-                                        id = nonNullCat.id,
-                                        affection = min(nonNullCat.affection + 0.1, 3.0)
-                                    )
-                                }
-                            }
-                            isPetting = true
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "Jouer",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Jouer", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+
+                    VerticalDivider(
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                        thickness = 1.dp,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+
+                    // Bouton Laver -> active le mode lavage
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { isWashing = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "Laver",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Laver", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+
+                    VerticalDivider(
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                        thickness = 1.dp,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+
+                    // Caresser
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { isPetting = true },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
@@ -350,9 +269,10 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
                     }
                 }
             }
-        }
+
             // Overlay mode lavage
             if (isWashing) {
+                isPetting = false
                 WashingOverlay(
                     initialProprete = proprete,
                     catBounds = catBounds,
@@ -362,9 +282,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat?) {
             }
             // Overlay mode caresse
             if (isPetting) {
+                isWashing = false
                 PettingOverlay(
                     catBounds = catBounds,
-                    onAffectionChange = { affection = (affection + it).coerceAtMost(100) },
                     onClose = { isPetting = false }
                 )
             }
@@ -392,7 +312,7 @@ private fun HeartItem(
 
     Image(
         painter = painterResource(R.drawable.petits_coeurs),
-        contentDescription = "Cœur",
+        contentDescription = "Cœurs",
         modifier = Modifier
             .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
             .size(heartSize)
@@ -400,7 +320,7 @@ private fun HeartItem(
     )
 }
 
-@SuppressLint("MutableCollectionMutableState")
+// kotlin
 @Composable
 fun WashingOverlay(
     initialProprete: Int,
@@ -431,7 +351,7 @@ fun WashingOverlay(
         }
     }
 
-    // Boîte transparente
+    // Boîte transparente — capte taps et drags sur toute la zone
     Box(
         Modifier
             .fillMaxSize()
@@ -440,16 +360,39 @@ fun WashingOverlay(
                 overlayPosX = pos.x
                 overlayPosY = pos.y
             }
-    ) {
-        // Éponge affichée au‑dessus, déplaçable
-        Image(
-            painter = painterResource(R.drawable.eponge),
-            contentDescription = "Éponge",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+            .pointerInput(Unit) {
+                // positionne à l'appui et suit le doigt pendant le drag
+                detectTapGestures(
+                    onPress = { offset ->
+                        // offset est local au Box
+                        spongeX = offset.x - spongeSizePx / 2f
+                        spongeY = offset.y - spongeSizePx / 2f
+
+                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        val spongeRectWindow = Rect(
+                            spongeX + overlayPosX,
+                            spongeY + overlayPosY,
+                            spongeX + overlayPosX + spongeSizePx,
+                            spongeY + overlayPosY + spongeSizePx
+                        )
+
+                        if (spongeRectWindow.overlaps(catBounds)) {
+                            proprete = (proprete + 1).coerceAtMost(100)
+                            onPropreteChange(proprete)
+                        }
+
+                        tryAwaitRelease() // attend le release si nécessaire
+                    }
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        // centrer l'éponge sous le doigt au démarrage du drag
+                        spongeX = offset.x - spongeSizePx / 2f
+                        spongeY = offset.y - spongeSizePx / 2f
+                    },
+                    onDrag = { change, dragAmount ->
                         change.consume()
                         spongeX += dragAmount.x
                         spongeY += dragAmount.y
@@ -468,7 +411,16 @@ fun WashingOverlay(
                             onPropreteChange(proprete)
                         }
                     }
-                }
+                )
+            }
+    ) {
+        // Éponge affichée au‑dessus
+        Image(
+            painter = painterResource(R.drawable.eponge),
+            contentDescription = "Éponge",
+            modifier = Modifier
+                .size(120.dp)
+                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
         )
 
         // Bouton Terminer — en bas au centre
@@ -486,7 +438,6 @@ fun WashingOverlay(
 @Composable
 fun PettingOverlay(
     catBounds: Rect,
-    onAffectionChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
     var overlayPosX by remember { mutableFloatStateOf(0f) }
@@ -513,31 +464,35 @@ fun PettingOverlay(
                 overlayPosY = pos.y
             }
             .pointerInput(Unit) {
-                detectTapGestures { tapOffset ->
-                    val windowX = tapOffset.x + overlayPosX
-                    val windowY = tapOffset.y + overlayPosY
-                    val now = System.currentTimeMillis()
-                    if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
-                        lastPetTime = now
-                        // positionner le coeur au dessus de la tête du chat (en coords overlay)
-                        val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                        val heartY = (catBounds.top) - overlayPosY - 40f
-                        hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                        onAffectionChange.invoke(1)
+                // tap pour positionner la main et créer un coeur si sur le chat
+                detectTapGestures(
+                    onPress = { tapOffset ->
+                        val windowX = tapOffset.x + overlayPosX
+                        val windowY = tapOffset.y + overlayPosY
+                        val now = System.currentTimeMillis()
+                        // positionne la main centrée sous le doigt
+                        handX = tapOffset.x - handSizePx / 2f
+                        handY = tapOffset.y - handSizePx / 2f
+
+                        if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
+                            lastPetTime = now
+                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                            val heartY = (catBounds.top) - overlayPosY - 40f
+                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                        }
+
+                        tryAwaitRelease()
                     }
-                }
+                )
             }
-    ) {
-        // Main déplaçable (remplacée par une icône pour éviter une drawable manquante)
-        Icon(
-            imageVector = Icons.Filled.FavoriteBorder,
-            contentDescription = "Main",
-            tint = Color.Red,
-            modifier = Modifier
-                .size(64.dp)
-                .offset { IntOffset(handX.toInt(), handY.toInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+            .pointerInput(Unit) {
+                // drag pour suivre le doigt et générer des coeurs en collision
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        handX = offset.x - handSizePx / 2f
+                        handY = offset.y - handSizePx / 2f
+                    },
+                    onDrag = { change, dragAmount ->
                         change.consume()
                         handX += dragAmount.x
                         handY += dragAmount.y
@@ -553,14 +508,21 @@ fun PettingOverlay(
                         val now = System.currentTimeMillis()
                         if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
                             lastPetTime = now
-                            // créer coeur au dessus du chat
                             val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
                             val heartY = (catBounds.top) - overlayPosY - 40f
                             hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                            onAffectionChange.invoke(1)
                         }
                     }
-                }
+                )
+            }
+    ) {
+        // Main déplaçable affichée (positionnée par le Box pointerInput)
+        Image(
+            painter = painterResource(R.drawable.main),
+            contentDescription = "Main",
+            modifier = Modifier
+                .size(64.dp)
+                .offset { IntOffset(handX.toInt(), handY.toInt()) }
         )
 
         // Rendu des coeurs animés
@@ -588,13 +550,14 @@ fun PettingOverlay(
     }
 }
 
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CatInteractionPreview() {
     CatwalkTheme {
         CatInteractionContent(
             modifier = Modifier,
-            cat = null
+            catName = "Minou"
         )
     }
 }
