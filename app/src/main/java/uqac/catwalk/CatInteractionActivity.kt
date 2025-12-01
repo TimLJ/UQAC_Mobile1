@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
@@ -90,7 +91,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val catName = cat.name
     var proprete by remember { mutableIntStateOf(cat.cleanliness) }
     var amusement by remember { mutableIntStateOf(cat.happiness) }
-    var affection by remember { mutableIntStateOf(cat.affection) }
+    var affection by remember { mutableStateOf(cat.affection) }
 
 
     var isWashing by remember { mutableStateOf(false) }
@@ -732,7 +733,7 @@ fun CatInteractionPreview() {
     CatwalkTheme {
         CatInteractionContent(
             modifier = Modifier,
-            cat = cat(
+            cat = Cat(
                 name = "Minou",
                 happiness = 50,
                 cleanliness = 50,
