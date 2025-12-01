@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -54,7 +52,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,7 +63,6 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.DataStoreManager
 import uqac.catwalk.sauvegarde.MsMoney
-import androidx.compose.runtime.getValue
 
 
 
@@ -215,10 +211,10 @@ fun AppBottomBar(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ShoppingCart,
-                        contentDescription = "Shop",
+                        contentDescription = "Boutique",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Shop", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Boutique", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
@@ -248,7 +244,7 @@ fun AppBottomBar(
                         contentDescription = "Cat",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Cat", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Chats", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
@@ -275,10 +271,10 @@ fun AppBottomBar(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
-                        contentDescription = "Walk",
+                        contentDescription = "Marche",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Text("Walk", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Marche", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
