@@ -13,6 +13,8 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -88,6 +90,22 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             .padding(innerPadding)
             .padding(top = 8.dp)
         ) {
+            IconButton(
+                onClick = {
+                    (context as? androidx.activity.ComponentActivity)
+                        ?.onBackPressedDispatcher
+                        ?.onBackPressed()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 8.dp, top = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Retour",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
