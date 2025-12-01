@@ -63,7 +63,7 @@ fun WalkContent(modifier: Modifier = Modifier) {
 
         // Pas
         Text(
-            text = "Pas: 1,234",
+            text = "Distance: 750 m ",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
