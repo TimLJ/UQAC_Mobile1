@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import kotlinx.coroutines.delay
 import uqac.catwalk.ui.theme.CatwalkTheme
 
@@ -74,6 +75,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF)),
+        // Bandeau supérieur
         topBar = {
             AppTopBar(
                 context = context,
@@ -82,13 +84,18 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     .height(80.dp)
             )
         }
-    ) { innerPadding ->
+    ) {
+            paddingValues ->
         Box(modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .padding(innerPadding)
-            .padding(top = 8.dp)
+            .padding(
+                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                top = 110.dp,
+                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = 50.dp
+            )
         ) {
+            // Bouton Retour
             IconButton(
                 onClick = {
                     (context as? ComponentActivity)
@@ -105,6 +112,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
+            // Contenu principal
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -120,7 +128,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         .padding(top = 8.dp),
                     textAlign = TextAlign.Center
                 )
-
+                // Affection en cœurs
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -165,7 +173,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
-
+                // Barres de progression
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
