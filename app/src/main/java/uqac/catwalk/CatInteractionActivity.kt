@@ -14,7 +14,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -92,7 +91,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
         ) {
             IconButton(
                 onClick = {
-                    (context as? androidx.activity.ComponentActivity)
+                    (context as? ComponentActivity)
                         ?.onBackPressedDispatcher
                         ?.onBackPressed()
                 },
