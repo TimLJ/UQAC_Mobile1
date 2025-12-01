@@ -58,7 +58,7 @@ class CatInteractionActivity : ComponentActivity() {
 fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
     val context = LocalContext.current
 
-    var proprete by remember { mutableIntStateOf(80) }
+    var proprete by remember { mutableIntStateOf(20) }
     var amusement by remember { mutableIntStateOf(60) }
     var affection by remember { mutableIntStateOf(2) }
 
@@ -147,6 +147,36 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                             },
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
+                    if ( proprete < 30 ) {
+                        Image(
+                            painter = painterResource(R.drawable.salete3),
+                            contentDescription = "Saleté",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .padding(16.dp),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+                    else if ( proprete < 60 ) {
+                        Image(
+                            painter = painterResource(R.drawable.salete2),
+                            contentDescription = "Saleté",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .padding(16.dp),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+                    else if ( proprete < 80 ) {
+                        Image(
+                            painter = painterResource(R.drawable.salete1),
+                            contentDescription = "Saleté",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .padding(16.dp),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
                 }
 
                 Row(
