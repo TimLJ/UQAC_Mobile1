@@ -196,7 +196,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable { isPlaying = true },
+                            .clickable { isPlaying = true
+                                       isWashing  = false
+                                       isPetting  = false },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -225,7 +227,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable { isWashing = true },
+                            .clickable { isWashing = true
+                                       isPetting = false
+                                       isPlaying  = false },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -254,7 +258,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable { isPetting = true },
+                            .clickable { isPetting = true
+                                       isWashing  = false
+                                       isPlaying  = false },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -276,6 +282,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             // Overlay mode lavage
             if (isWashing) {
                 isPetting = false
+                isPlaying = false
                 WashingOverlay(
                     initialProprete = proprete,
                     catBounds = catBounds,
@@ -286,6 +293,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
             // Overlay mode caresse
             if (isPetting) {
                 isWashing = false
+                isPlaying = false
                 PettingOverlay(
                     catBounds = catBounds,
                     onClose = { isPetting = false }
@@ -294,6 +302,8 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
 
             // Overlay mode jeu
             if (isPlaying) {
+                isWashing = false
+                isPetting = false
                 PlayingOverlay(
                     initialAmusement = amusement,
                     catBounds = catBounds,
@@ -367,6 +377,7 @@ fun WashingOverlay(
     Box(
         Modifier
             .fillMaxSize()
+            .padding(bottom = 100.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
@@ -440,7 +451,7 @@ fun WashingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 160.dp)
+                .padding(bottom = 60.dp)
         ) {
             Text("Terminer")
         }
@@ -470,6 +481,7 @@ fun PettingOverlay(
     Box(
         Modifier
             .fillMaxSize()
+            .padding(bottom = 100.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
@@ -555,7 +567,7 @@ fun PettingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 160.dp)
+                .padding(bottom = 60.dp)
         ) {
             Text("Terminer")
         }
@@ -596,6 +608,7 @@ fun PlayingOverlay(
     Box(
         Modifier
             .fillMaxSize()
+            .padding(bottom = 100.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
@@ -609,7 +622,7 @@ fun PlayingOverlay(
                         toyX = offset.x - toySizePx / 2f
                         toyY = offset.y - toySizePx / 2f
 
-                        // convertit rectangle de l'éponge en coordonnées fenêtre
+                        // convertit rectangle du plumeau en coordonnées fenêtre
                         val toyRectWindow = Rect(
                             toyX + overlayPosX,
                             toyY + overlayPosY,
@@ -669,7 +682,7 @@ fun PlayingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 160.dp)
+                .padding(bottom = 60.dp)
         ) {
             Text("Terminer")
         }
