@@ -91,7 +91,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val catName = cat.name
     var proprete by remember { mutableIntStateOf(cat.cleanliness) }
     var amusement by remember { mutableIntStateOf(cat.happiness) }
-    var affection by remember { mutableStateOf(cat.affection) }
+    var affection by remember { mutableFloatStateOf(cat.affection) }
 
 
     var isWashing by remember { mutableStateOf(false) }
@@ -313,7 +313,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     catBounds = catBounds,
                     onPropreteChange = {newCleanliness -> // Mettre à jour la propreté du chat dans la BDD
                         cat?.let { nonNullCat ->
-                            scope.launch(Dispatchers.IO).launch {
+                            scope.launch(Dispatchers.IO) {
                                 catDao.updateCatCleanliness(
                                     id = nonNullCat.id,
                                     cleanliness = newCleanliness
@@ -340,8 +340,8 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     catBounds = catBounds,
                     onAmusementChange = { newAmusement ->
                         cat?.let { nonNullCat ->
-                            scope.launch(Dispatchers.IO).launch {
-                                catDao.updateCatCleanliness(
+                            scope.launch(Dispatchers.IO) {
+                                catDao.updateCatHappiness(
                                     id = nonNullCat.id,
                                     happiness = newAmusement
                                 )
