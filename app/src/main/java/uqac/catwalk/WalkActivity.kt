@@ -55,7 +55,9 @@ import kotlinx.coroutines.runBlocking
 import uqac.catwalk.ui.theme.CatwalkTheme
 import kotlin.random.Random
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -66,7 +68,12 @@ import com.google.android.gms.location.LocationRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+import com.google.android.gms.location.Priority
 
 class WalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +94,7 @@ class WalkActivity : ComponentActivity() {
 
 @Composable
 fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
-    val progress by remember { mutableIntStateOf(Random.nextInt(4000, 10001)) }
+    var progress by remember { mutableDoubleStateOf(0.0) }
 
     val serviceIntent = remember { Intent(context, LocationService::class.java) }
     var isServiceRunning by remember { mutableStateOf(false) }
@@ -103,17 +110,32 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
     )
 
     val location by LocationService.instance?.locationUpdates?.collectAsState() ?: remember { mutableStateOf(null) }
+    var PreviousLoc by remember { mutableStateOf(location) }
 
     // Ce LaunchedEffect se déclenchera chaque fois que `location` change
     LaunchedEffect(location) {
-        location?.let {
+        location?.let { currentLocation -> // Using a more descriptive name than "it"
             Toast.makeText(
                 context,
-                "Latitude: ${it.latitude}, Longitude: ${it.longitude}",
-                Toast.LENGTH_SHORT
+                "Latitude: ${currentLocation.latitude}, Longitude: ${currentLocation.longitude}",
+                Toast.LENGTH_LONG
             ).show()
+
+            PreviousLoc?.let { previous -> // Also good practice to use let for PreviousLoc
+                //d= 2R × sin⁻¹(√[sin²((θ₂ - θ₁)/2) + cosθ₁ × cosθ₂ × sin²((φ₂ - φ₁)/2)])
+                val lat1 = Math.toRadians(previous.latitude)
+                val lat2 = Math.toRadians(currentLocation.latitude)
+                val lon1 = Math.toRadians(previous.longitude)
+                val lon2 = Math.toRadians(currentLocation.longitude)
+                val distance = 2 * 6371400.0 * asin(
+                    sqrt(sin((lat2 - lat1) / 2).pow(2) + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2).pow(2))
+                )
+                progress += distance
+            }
+            PreviousLoc = currentLocation // Update PreviousLoc with the stable currentLocation
         }
     }
+
 
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
@@ -160,12 +182,16 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Marché ${(progress)} pas",
+                text = "Marché ${(progress)} mètres",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            var remplissage : Float = (progress / 2500).toFloat()
+            while (remplissage > 1){
+                remplissage-=1
+            }
             LinearProgressIndicator(
-            progress = { progress/10000.toFloat() },
+            progress = { remplissage},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
@@ -182,7 +208,10 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
         Button(
             onClick = {
                 val intent = Intent(context, EndWalkActivity::class.java)
+                intent.putExtra("progress", progress)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                context.stopService(serviceIntent)
+                isServiceRunning = false
                 context.startActivity(intent)
             },
             modifier = Modifier
@@ -227,9 +256,7 @@ class LocationService : LifecycleService() {
         instance = this
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationRequest = LocationRequest.Builder(5000).build().apply {
-            priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
 
         startForeground(1, createNotification())
         requestLocationUpdates()
@@ -270,6 +297,7 @@ class LocationService : LifecycleService() {
     override fun onDestroy() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         instance = null
     }
 }

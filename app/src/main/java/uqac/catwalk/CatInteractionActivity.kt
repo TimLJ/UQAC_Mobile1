@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -36,7 +37,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
@@ -45,22 +49,49 @@ class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val catName = intent?.getStringExtra("catName") ?: "Inconnu"
+        val catId = intent?.getIntExtra("catID",-1)
+        if (catId == -1 || catId == null) {
+            // Gérer l'erreur : fermer l'activité, afficher un message, etc.
+            finish()
+            return
+        }
         setContent {
             CatwalkTheme {
-                CatInteractionContent(catName = catName)
+                // 2. Récupérer les données du chat depuis la BDD
+                val database = AppDatabase.getDatabase(context = this)
+                val catDao = database.CatDao()
+                val cat by catDao.getCatById(catId).collectAsState(initial = null)
+                // 3. Afficher le contenu uniquement quand le chat est chargé
+                cat?.let { loadedCat ->
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        CatInteractionContent(
+                            cat = loadedCat,
+                            modifier = Modifier.padding(innerPadding),
+                        )
+                    }
+                } ?: run {
+                    // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        // CircularProgressIndicator()
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
+fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val context = LocalContext.current
+    val database = AppDatabase.getDatabase(context)
+    val catDao = database.CatDao()
+    val scope = rememberCoroutineScope()
 
-    var proprete by remember { mutableIntStateOf(80) }
-    var amusement by remember { mutableIntStateOf(60) }
-    var affection by remember { mutableIntStateOf(2) }
+    val catName = cat.name
+    var proprete by remember { mutableIntStateOf(cat.cleanliness) }
+    var amusement by remember { mutableIntStateOf(cat.happiness) }
+    var affection by remember { mutableIntStateOf(cat.affection) }
+
 
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
@@ -95,7 +126,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = catName,
+                    text = catName ?: "Chat Inconn",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -279,7 +310,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 WashingOverlay(
                     initialProprete = proprete,
                     catBounds = catBounds,
-                    onPropreteChange = { proprete = it },
+                    onPropreteChange = {newCleanliness -> // Mettre à jour la propreté du chat dans la BDD
+                        cat?.let { nonNullCat ->
+                            scope.launch(Dispatchers.IO).launch {
+                                catDao.updateCatCleanliness(
+                                    id = nonNullCat.id,
+                                    cleanliness = newCleanliness
+                                )
+                            }
+                        }
+                    },
                     onClose = { isWashing = false }
                 )
             }
@@ -297,7 +337,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 PlayingOverlay(
                     initialAmusement = amusement,
                     catBounds = catBounds,
-                    onAmusementChange = { amusement = it },
+                    onAmusementChange = { newAmusement ->
+                        cat?.let { nonNullCat ->
+                            scope.launch(Dispatchers.IO).launch {
+                                catDao.updateCatCleanliness(
+                                    id = nonNullCat.id,
+                                    happiness = newAmusement
+                                )
+                            }
+                        }
+                    },
                     onClose = { isPlaying = false }
                 )
             }
@@ -683,7 +732,14 @@ fun CatInteractionPreview() {
     CatwalkTheme {
         CatInteractionContent(
             modifier = Modifier,
-            catName = "Minou"
+            cat = cat(
+                name = "Minou",
+                happiness = 50,
+                cleanliness = 50,
+                affection = 0.5f,
+                achievementId = null,
+                obtenu = true
+            ),
         )
     }
 }

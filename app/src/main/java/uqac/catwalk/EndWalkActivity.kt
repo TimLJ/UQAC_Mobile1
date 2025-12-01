@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,7 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import uqac.catwalk.ui.theme.CatwalkTheme
+import uqac.catwalk.sauvegarde.updtMoney
+import uqac.catwalk.sauvegarde.addDistance
+
 
 class EndWalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +42,8 @@ class EndWalkActivity : ComponentActivity() {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WalkContent(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        intent = intent,
                     )
                 }
             }
@@ -45,8 +52,15 @@ class EndWalkActivity : ComponentActivity() {
 }
 
 @Composable
-fun WalkContent(modifier: Modifier = Modifier) {
+fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
     val context = LocalContext.current
+    val distance = intent.getDoubleExtra("progress", 0.0)
+    val coroutineScope = rememberCoroutineScope()
+    val affection = (distance / 2500).toInt() * 0.3
+    val pièces = (distance / 50).toInt()
+
+
+
 
     Column(
         modifier = modifier
@@ -63,7 +77,7 @@ fun WalkContent(modifier: Modifier = Modifier) {
 
         // Pas
         Text(
-            text = "Distance: 750 m ",
+            text = "Distance: ${String.format("%.0f", distance)} m ",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
@@ -71,26 +85,32 @@ fun WalkContent(modifier: Modifier = Modifier) {
 
         // Pièces
         Text(
-            text = "Pièces: 56",
+            text = "Pièces: ${String.format("%.0f",pièces)}",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.secondary
         )
 
-        // Temps
-        Text(
-            text = "Temps: 15:30",
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.tertiary
-        )
+        // Affection du chat
+        //Text(
+        //    text = "Affection gagnée : ${String.format("%.0f",affection)} coeur",
+        //    fontSize = 24.sp,
+        //    style = MaterialTheme.typography.headlineSmall,
+        //    color = MaterialTheme.colorScheme.tertiary
+        //)
+        //A ajouter quand on poura définir un chat comme favori pour la ballade
 
         // Bouton de retour
         Button(
             onClick = {
-                val intent = Intent(context, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
+                coroutineScope.launch { 
+                    addDistance(distance.toInt(), context)
+                    updtMoney(pièces, context)
+                    //ajouter l'affection du chat
+                    val intent = Intent(context, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intent)
+                }
             },
             modifier = Modifier
                 .padding(16.dp)
@@ -110,6 +130,6 @@ fun WalkContent(modifier: Modifier = Modifier) {
 @Composable
 fun WalkContentPreview() {
     CatwalkTheme {
-        WalkContent()
+        WalkContent(intent = Intent())
     }
 }
