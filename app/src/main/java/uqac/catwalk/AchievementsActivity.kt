@@ -227,7 +227,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                         .padding(start = 16.dp, end = 16.dp)
                 ) {
                     Text(
-                        text = "Achievements",
+                        text = "Succès",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
