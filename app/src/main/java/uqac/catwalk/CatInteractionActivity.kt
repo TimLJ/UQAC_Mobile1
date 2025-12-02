@@ -112,9 +112,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, catName: String) {
                 ) {
                     repeat(3) { index ->
                         val heartIcon = if (index < affection)
-                            painterResource(R.drawable.ic_heart_full)
+                            painterResource(R.drawable.full_heart)
                         else
-                            painterResource(R.drawable.ic_heart_empty)
+                            painterResource(R.drawable.empty_heart)
                         Image(
                             painter = heartIcon,
                             contentDescription = "Cœur ${index + 1}",
