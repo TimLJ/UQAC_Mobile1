@@ -85,7 +85,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
 
         // Pièces
         Text(
-            text = "Pièces: ${String.format("%.0f",pièces)}",
+            text = "Pièces: $pièces",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.secondary

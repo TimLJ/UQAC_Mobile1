@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.renderscript.RenderScript
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,6 +74,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import com.google.android.gms.location.Priority
+import android.provider.Settings
 
 class WalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,19 +93,43 @@ class WalkActivity : ComponentActivity() {
     }
 }
 
+fun isLocationEnabled(context: Context): Boolean {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+}
+
+
 @Composable
 fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
     var progress by remember { mutableDoubleStateOf(0.0) }
-
     val serviceIntent = remember { Intent(context, LocationService::class.java) }
     var isServiceRunning by remember { mutableStateOf(false) }
+
+    var locationEnabled by remember { mutableStateOf(isLocationEnabled(context)) }
+
+    val locationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (isLocationEnabled(context)) {
+            locationEnabled = true
+            if (!isServiceRunning && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                context.startService(serviceIntent)
+                isServiceRunning = true
+            }
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
             if (granted) {
+                locationEnabled = true
                 context.startService(serviceIntent)
                 isServiceRunning = true
+            }
+            else {
+                locationEnabled = false
             }
         }
     )
@@ -143,83 +168,102 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
                 context,
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             ) -> {
-                // La permission est déjà accordée, on démarre le service
-                context.startService(serviceIntent)
-                isServiceRunning = true
+                if (isLocationEnabled(context)) {
+                    locationEnabled = true
+                    context.startService(serviceIntent)
+                    isServiceRunning = true
+                } else {
+                    locationEnabled = false
+                }
             }
             else -> {
-                // La permission n'est pas accordée, on la demande
                 permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp, 16.dp, 16.dp, 0.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        // Text
-        Text(
-            text = "Ballade en cours...",
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
-
-        // Temporary image (using launcher icon as placeholder)
-        Image(
-            painter = painterResource(id = android.R.drawable.ic_dialog_info),
-            contentDescription = "Image temporaire",
-            modifier = Modifier.size(150.dp)
-        )
-
-        // Progress bar
+    if (locationEnabled) {
+        // --- UI existante quand tout va bien ---
         Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp, 16.dp, 16.dp, 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
             Text(
-                text = "Marché ${(progress)} mètres",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
+                text = "Ballade en cours...",
+                fontSize = 24.sp,
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center
             )
-            var remplissage : Float = (progress / 2500).toFloat()
-            while (remplissage > 1){
-                remplissage-=1
+            Image(
+                painter = painterResource(id = android.R.drawable.ic_dialog_info),
+                contentDescription = "Image temporaire",
+                modifier = Modifier.size(150.dp)
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Marché ${progress.toInt()} mètres", // Afficher en entier pour plus de lisibilité
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                val remplissage = (progress / 2500.0).toFloat().coerceIn(0f, 1f)
+                LinearProgressIndicator(
+                    progress = { remplissage },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                )
             }
-            LinearProgressIndicator(
-            progress = { remplissage},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            color = ProgressIndicatorDefaults.linearColor,
-            trackColor = ProgressIndicatorDefaults.linearTrackColor,
-            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            Text(
+                text = "Localisation ${location?.latitude}, ${location?.longitude}",
             )
+            Button(
+                onClick = {
+                    val intent = Intent(context, EndWalkActivity::class.java)
+                    intent.putExtra("progress", progress)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.stopService(serviceIntent)
+                    isServiceRunning = false
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .width(200.dp)
+                    .height(60.dp),
+            ) {
+                Text(text = "STOP", fontSize = 18.sp)
+            }
         }
-        Text(
-            text="Prochain objectif à 10 000 pas",
-        )
-
-        // Stop button
-        Button(
-            onClick = {
-                val intent = Intent(context, EndWalkActivity::class.java)
-                intent.putExtra("progress", progress)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                context.stopService(serviceIntent)
-                isServiceRunning = false
-                context.startActivity(intent)
-            },
-            modifier = Modifier
-                .padding(16.dp)
-                .width(200.dp)
-                .height(60.dp),
+    } else {
+        // --- NOUVELLE UI quand la localisation est désactivée ---
+        Column(
+            modifier = modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "STOP", fontSize = 18.sp)
+            Text(
+                text = "Géolocalisation requise",
+                fontSize = 24.sp,
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "Pour suivre votre balade, veuillez activer les services de localisation de votre téléphone.",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+            Button(onClick = {
+                // Ouvre les paramètres de localisation du téléphone
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                locationSettingsLauncher.launch(intent)
+            }) {
+                Text("Activer la localisation")
+            }
         }
     }
 }
@@ -242,6 +286,8 @@ class LocationService : LifecycleService() {
             }
         }
     }
+
+
 
     private val _locationUpdates = MutableStateFlow<Location?>(null)
     val locationUpdates: StateFlow<Location?> = _locationUpdates.asStateFlow()
