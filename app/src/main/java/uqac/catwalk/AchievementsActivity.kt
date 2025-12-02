@@ -3,6 +3,7 @@ package uqac.catwalk
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,9 +11,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -26,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -49,17 +54,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.MsMoney
 import uqac.catwalk.sauvegarde.PlayerData
 import uqac.catwalk.sauvegarde.entities.Achievement
+import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class AchievementsActivity : ComponentActivity() {
@@ -90,17 +100,9 @@ fun AppTopBar(context: Context,
     ) {
         Row(
             modifier = Modifier
-                .background(color = Color.Cyan)
+                .background(colorResource(R.color.light_yellow))
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .drawBehind {
-                    drawLine(
-                        color = Color.Black,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = 3.dp.toPx()
-                    )
-                },
+                .fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Bouton Home en haut à gauche
@@ -110,26 +112,34 @@ fun AppTopBar(context: Context,
                     context.startActivity(intent)
                 },
                 modifier = Modifier
-                    .padding(start = 5.dp)
+                    .padding(start = 10.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Home,
                     contentDescription = "Retour à l'accueil"
                 )
             }
-
+            // Barre d'experience
             Button(
                 onClick = {
                     val intent = Intent(context, AchievementsActivity::class.java)
                     context.startActivity(intent)
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
+                    .size(200.dp, 80.dp)
                     .padding(start = 5.dp)
-                    .fillMaxWidth(1f / 1.5f)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = "Go to Lv Activity"
+                Image(
+                    painter = painterResource(R.drawable.exp_bar),
+                    contentDescription = "Barre d'expérience, qui ressemble à une fiole avec du liquide violet.",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(colorResource(R.color.light_yellow))
                 )
             }
             Row(
@@ -137,31 +147,39 @@ fun AppTopBar(context: Context,
                     .fillMaxWidth()
             ) {
                 Box(
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.CenterStart,
+                    modifier = Modifier
+                        .padding(end = 10.dp)
                 ) {
                     Text(
-                        text = Player.money.toString(),
+                        text = MsMoney.toString(),
                         textAlign = TextAlign.Center,
                         fontSize = 25.sp,
                         modifier = Modifier
-                            .size(height = 40.dp, width = 60.dp)
-                            .offset(40.dp)
-                            .border(BorderStroke(2.dp, Color.Black))
-                            .background(color = Color.Yellow)
+                            .size(height = 40.dp, width = 80.dp)
+                            .padding(start = 15.dp)
+                            .offset(25.dp)
+                            .border(BorderStroke(2.dp, colorResource(R.color.orange)))
+                            .background(colorResource(R.color.white))
                             .offset(x = 5.dp, y = 5.dp)
-
                     )
                     Image(
-                        painter = painterResource(R.drawable.money_icon),
+                        painter = painterResource(R.drawable.paw_coin),
                         contentDescription = "Image de pièce chat",
                         modifier = Modifier
-                            .background(color = Color.White)
-                            .size(50.dp)
+                            .size(55.dp)
                     )
                 }
             }
 
         }
+        Image(
+            painter = painterResource(R.drawable.lvl1),
+            contentDescription = "Niveau un",
+            modifier = Modifier
+                .size(65.dp, 55.dp)
+                .offset(x = 80.dp)
+        )
     }
 }
 

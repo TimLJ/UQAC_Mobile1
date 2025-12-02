@@ -13,9 +13,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,12 +31,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -67,7 +71,10 @@ import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.DataStoreManager
 import uqac.catwalk.sauvegarde.MsMoney
 import androidx.compose.runtime.getValue
-
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
+import androidx.core.content.ContextCompat
 
 
 class MainActivity : ComponentActivity() {
@@ -110,17 +117,9 @@ fun MainTopBar(
     ) {
         Row(
             modifier = Modifier
-                .background(color = Color.Cyan)
+                .background(colorResource(R.color.light_yellow))
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .drawBehind {
-                    drawLine(
-                        color = Color.Black,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = 3.dp.toPx()
-                    )
-                },
+                .fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
@@ -128,13 +127,21 @@ fun MainTopBar(
                     val intent = Intent(context, AchievementsActivity::class.java)
                     context.startActivity(intent)
                 },
+                contentPadding = PaddingValues(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
                 modifier = Modifier
-                    .padding(start = 16.dp, end = 16.dp)
-                    .width(250.dp)
+                    .padding(start = 16.dp)
+                    .size(250.dp, 60.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = "Go to Lv Activity"
+                Image(
+                    painter = painterResource(R.drawable.exp_bar),
+                    contentDescription = "Barre d'expérience, qui ressemble à une fiole avec du liquide violet.",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(colorResource(R.color.light_yellow))
                 )
             }
             Row(
@@ -149,10 +156,11 @@ fun MainTopBar(
                         textAlign = TextAlign.Center,
                         fontSize = 25.sp,
                         modifier = Modifier
-                            .size(height = 40.dp, width = 60.dp)
+                            .size(height = 40.dp, width = 80.dp)
+                            .padding(start = 15.dp)
                             .offset(40.dp)
-                            .border(BorderStroke(2.dp, Color.Black))
-                            .background(color = Color.Yellow)
+                            .border(BorderStroke(2.dp, colorResource(R.color.orange)))
+                            .background(colorResource(R.color.white))
                             .offset(x = 5.dp, y = 5.dp)
                             .clickable {
                                 coroutineScope.launch {
@@ -162,11 +170,10 @@ fun MainTopBar(
                             }
                     )
                     Image(
-                        painter = painterResource(R.drawable.money_icon),
+                        painter = painterResource(R.drawable.paw_coin),
                         contentDescription = "Image de pièce chat",
                         modifier = Modifier
-                            .background(color = Color.White)
-                            .size(50.dp)
+                            .size(55.dp)
                             .clickable {
                                 coroutineScope.launch {
                                     updtMoney(50, context)
@@ -178,6 +185,12 @@ fun MainTopBar(
             }
 
         }
+        Image(
+            painter = painterResource(R.drawable.lvl1),
+            contentDescription = "Niveau un",
+            modifier = Modifier
+                .size(70.dp, 60.dp)
+        )
     }
 }
 
@@ -195,7 +208,7 @@ fun AppBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.primary)
+                .background(colorResource(R.color.light_yellow))
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
@@ -216,14 +229,14 @@ fun AppBottomBar(
                     Icon(
                         imageVector = Icons.Filled.ShoppingCart,
                         contentDescription = "Shop",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        tint = colorResource(R.color.black)
                     )
-                    Text("Shop", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Boutique", color = colorResource(R.color.black))
                 }
             }
 
             VerticalDivider(
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                color = colorResource(R.color.black),
                 thickness = 1.dp,
                 modifier = Modifier
                     .fillMaxHeight()
@@ -243,17 +256,18 @@ fun AppBottomBar(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Face,
-                        contentDescription = "Cat",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                    Image(
+                        painter = painterResource(R.drawable.cat_icon),
+                        contentDescription = "Icone de chat noir",
+                        modifier = Modifier
+                            .size(24.dp)
                     )
-                    Text("Cat", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Chats", color = colorResource(R.color.black))
                 }
             }
 
             VerticalDivider(
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                color = colorResource(R.color.black),
                 thickness = 1.dp,
                 modifier = Modifier
                     .fillMaxHeight()
@@ -273,12 +287,19 @@ fun AppBottomBar(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Walk",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                    Image(
+                        painter = painterResource(R.drawable.walk_icon),
+                        contentDescription = "Chat noir de profil qui marche.",
+                        modifier = Modifier
+                            .size(28.dp)
+                            .offset(y = -4.dp)
                     )
-                    Text("Walk", color = MaterialTheme.colorScheme.onPrimary)
+                    Text(
+                        "Marche",
+                        color = colorResource(R.color.black),
+                        modifier = Modifier
+                            .offset(y = -2.dp)
+                    )
                 }
             }
         }
@@ -290,7 +311,7 @@ fun AppBottomBar(
 @Composable
 fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-
+    val scrollState = rememberScrollState()
     val Player by remember { mutableStateOf(PlayerData) }
 
     Scaffold(
@@ -308,10 +329,28 @@ fun MainContent(modifier: Modifier = Modifier) {
                 modifier = modifier
                     .padding(paddingValues)
                     .fillMaxSize()
+                    .horizontalScroll(scrollState)
             ) {
-                Text(
-                    text = "Fond de la maison des chats",
-                    modifier = Modifier.align(Alignment.Center)
+                Image(
+                    painter = painterResource(R.drawable.background),
+                    contentDescription = "Image de prairie avec une rivière, un moulin, et des oiseaux dans le ciel.",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.floor),
+                    contentDescription = "Image d'un plancher.",
+                    modifier = Modifier
+                        .padding(start = 100.dp, top = 80.dp)
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.house),
+                    contentDescription = "Image d'une maison avec des oreilles de chat.",
+                    modifier = Modifier
+                        .padding(start = 100.dp, top = 80.dp)
                 )
             }
         },
