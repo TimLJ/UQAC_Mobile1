@@ -68,7 +68,7 @@ fun CatContent(modifier: Modifier = Modifier) {
     // Liste des noms de chats (36 noms pour remplir la grille 3x12)
     val database = AppDatabase.getDatabase(context = context)
     val catDao = database.CatDao()
-    val cats by catDao.getDébloqués().collectAsState(initial = emptyList())
+    val cats by catDao.getDebloques().collectAsState(initial = emptyList())
 
     Scaffold(
         topBar = {
