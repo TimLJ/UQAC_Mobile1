@@ -218,7 +218,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                         bottom = 100.dp
                     )
                     .fillMaxSize()
-                    .background(color = Color.LightGray)
+                    .background(color = colorResource(R.color.yellow_white))
             ) {
                 // Liste scrollable des niveaux
                 Column(
