@@ -111,12 +111,16 @@ fun AppTopBar(context: Context,
                     val intent = Intent(context, MainActivity::class.java)
                     context.startActivity(intent)
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(R.color.light_blue)
+                ),
                 modifier = Modifier
                     .padding(start = 10.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Home,
-                    contentDescription = "Retour à l'accueil"
+                    contentDescription = "Retour à l'accueil",
+                    tint = colorResource(R.color.black),
                 )
             }
             // Barre d'experience

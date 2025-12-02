@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -46,7 +48,9 @@ class WalkActivity : ComponentActivity() {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ProgressContent(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(colorResource(R.color.yellow_white))
                     )
                 }
             }
@@ -55,7 +59,8 @@ class WalkActivity : ComponentActivity() {
 }
 
 @Composable
-fun ProgressContent(modifier: Modifier = Modifier) {
+fun ProgressContent(
+    modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val progress by remember { mutableIntStateOf(Random.nextInt(4000, 10001)) }
 
@@ -114,6 +119,9 @@ fun ProgressContent(modifier: Modifier = Modifier) {
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(R.color.red)
+            ),
             modifier = Modifier
                 .padding(16.dp)
                 .width(200.dp)

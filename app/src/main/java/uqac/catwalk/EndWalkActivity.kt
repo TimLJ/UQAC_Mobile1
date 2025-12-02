@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -38,7 +39,9 @@ class EndWalkActivity : ComponentActivity() {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WalkContent(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(colorResource(R.color.yellow_white))
                     )
                 }
             }
@@ -95,6 +98,9 @@ fun WalkContent(modifier: Modifier = Modifier) {
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(R.color.light_blue)
+            ),
             modifier = Modifier
                 .padding(16.dp)
                 .width(200.dp)
