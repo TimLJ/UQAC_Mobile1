@@ -89,9 +89,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val scope = rememberCoroutineScope()
 
     val catName = cat.name
-    var proprete by remember { mutableIntStateOf(cat.cleanliness) }
-    var amusement by remember { mutableIntStateOf(cat.happiness) }
-    var affection by remember { mutableFloatStateOf(cat.affection) }
+    var proprete = cat.cleanliness
+    var amusement = cat.happiness
+    var affection = cat.affection
 
 
     var isWashing by remember { mutableStateOf(false) }
