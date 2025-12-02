@@ -314,7 +314,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                             },
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
-                    if (proprete < 30) {
+                    if (proprete < 150) {
                         Image(
                             painter = painterResource(R.drawable.salete3),
                             contentDescription = "Saleté",
@@ -323,7 +323,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    } else if (proprete < 60) {
+                    } else if (proprete < 300) {
                         Image(
                             painter = painterResource(R.drawable.salete2),
                             contentDescription = "Saleté",
@@ -332,7 +332,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    } else if (proprete < 80) {
+                    } else if (proprete < 400) {
                         Image(
                             painter = painterResource(R.drawable.salete1),
                             contentDescription = "Saleté",
@@ -353,7 +353,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Propreté", fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(
-                        progress = { proprete / 100f },
+                        progress = { proprete / 500f },
                         modifier = Modifier
                                                         .width(130.dp)
                                                         .height(10.dp)
@@ -366,7 +366,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Amusement", fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(
-                        progress = { amusement / 100f },
+                        progress = { amusement / 500f },
                         modifier = Modifier
                                                         .width(130.dp)
                                                         .height(10.dp)
@@ -539,7 +539,7 @@ fun WashingOverlay(
 
                         // détection contact éponge/chat en coordonnées fenêtre
                         if (spongeRectWindow.overlaps(catBounds)) {
-                            proprete = (proprete + 1).coerceAtMost(100)
+                            proprete = (proprete + 1).coerceAtMost(500)
                             onPropreteChange(proprete)
                         }
                     }
@@ -772,7 +772,7 @@ fun PlayingOverlay(
 
                         // détection contact plumeau/chat en coordonnées fenêtre
                         if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(100)
+                            amusement = (amusement + 1).coerceAtMost(500)
                             onAmusementChange(amusement)
                         }
                     }
