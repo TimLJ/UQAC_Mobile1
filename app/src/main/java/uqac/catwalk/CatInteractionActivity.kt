@@ -152,7 +152,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = catName ?: "Chat Inconn",
+                    text = catName ?: "Chat Inconnu",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -483,6 +483,7 @@ fun WashingOverlay(
         Modifier
             .fillMaxSize()
             .padding(bottom = 100.dp)
+            .padding(top = 60.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
@@ -587,6 +588,7 @@ fun PettingOverlay(
         Modifier
             .fillMaxSize()
             .padding(bottom = 100.dp)
+            .padding(top = 60.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
@@ -714,6 +716,7 @@ fun PlayingOverlay(
         Modifier
             .fillMaxSize()
             .padding(bottom = 100.dp)
+            .padding(top = 60.dp)
             .onGloballyPositioned { layout ->
                 val pos = layout.positionInWindow()
                 overlayPosX = pos.x
