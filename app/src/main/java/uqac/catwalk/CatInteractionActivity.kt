@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.colorResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -134,7 +135,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .height(100.dp)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(colorResource(R.color.orange))
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
@@ -151,20 +152,20 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Star,
                             contentDescription = "Jouer",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = colorResource(R.color.black)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Jouer", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Jouer", color = colorResource(R.color.black))
                     }
                 }
 
                 VerticalDivider(
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                    color = colorResource(R.color.black),
                     thickness = 1.dp,
                     modifier = Modifier.fillMaxHeight()
                 )
@@ -187,15 +188,15 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         Icon(
                             imageVector = Icons.Filled.PlayArrow,
                             contentDescription = "Laver",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = colorResource(R.color.black)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Laver", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Laver", color = colorResource(R.color.black))
                     }
                 }
 
                 VerticalDivider(
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                    color = colorResource(R.color.black),
                     thickness = 1.dp,
                     modifier = Modifier.fillMaxHeight()
                 )
@@ -218,10 +219,10 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         Icon(
                             imageVector = Icons.Filled.FavoriteBorder,
                             contentDescription = "Caresser",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = colorResource(R.color.black)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Caresser", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Caresser", color = colorResource(R.color.black))
                     }
                 }
             }
