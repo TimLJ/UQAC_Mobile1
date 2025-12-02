@@ -84,11 +84,12 @@ abstract class AppDatabase : RoomDatabase() {
             )
             items.forEach { itemDao.insert(it) }
 
-            // Optionnel : ajouter des chats de départ
+            // ajouter des chats de départ
             val catDao = database.CatDao()
             val starterCats = listOf(
                 Cat(
                     name = "Minou",
+                    color = "chat_blanc_noir",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0.5f,
@@ -97,6 +98,7 @@ abstract class AppDatabase : RoomDatabase() {
                 ),
                 Cat(
                     name = "Bouboule",
+                    color = "chat_gris",
                     happiness = 70,
                     cleanliness = 30,
                     affection = 1.2f,
@@ -105,6 +107,7 @@ abstract class AppDatabase : RoomDatabase() {
                 ),
                 Cat(
                     name = "Whiskers",
+                    color = "chat_roux",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0.5f,
@@ -113,6 +116,7 @@ abstract class AppDatabase : RoomDatabase() {
                 ),
                 Cat(
                     name = "Odie",
+                    color = "chat_gris",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0.5f,
@@ -121,6 +125,7 @@ abstract class AppDatabase : RoomDatabase() {
                 ),
                 Cat(
                     name = "Félix",
+                    color = "chat_roux",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0.5f,

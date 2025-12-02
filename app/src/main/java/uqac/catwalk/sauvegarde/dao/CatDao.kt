@@ -23,10 +23,13 @@ interface CatDao {
     fun getCatById(id: Int): Flow<Cat>
 
     @Query("SELECT * FROM cats WHERE obtenu = true")
-    fun getDébloqués(): Flow<List<Cat>>
+    fun getDebloques(): Flow<List<Cat>>
 
     @Query("UPDATE cats SET name = :name WHERE id = :id")
     suspend fun updateCatName(id: Int, name: String)
+
+    @Query("UPDATE cats SET color = :color WHERE id = :id")
+    suspend fun updateCatColor(id: Int, color: String)
 
     @Query("UPDATE cats SET happiness = :happiness WHERE id = :id")
     suspend fun updateCatHappiness(id: Int, happiness: Int)

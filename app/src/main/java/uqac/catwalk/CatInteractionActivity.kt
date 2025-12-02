@@ -1,5 +1,6 @@
 package uqac.catwalk
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,6 +48,21 @@ import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
+
+@SuppressLint("DiscouragedApi", "LocalContextResourcesRead")
+@Composable
+fun catPainter(colorName: String?, @androidx.annotation.DrawableRes fallback: Int = R.drawable.chat_roux): androidx.compose.ui.graphics.painter.Painter {
+    val context = LocalContext.current
+    val resName = colorName?.substringBefore('.') ?: ""
+    val resId = remember(resName) {
+        if (resName.isBlank()) fallback
+        else {
+            context.resources.getIdentifier(resName, "drawable", context.packageName)
+                .takeIf { it != 0 } ?: fallback
+        }
+    }
+    return painterResource(id = resId)
+}
 
 class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -281,7 +297,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.chat_roux),
+                        painter = catPainter(cat.color),
                         contentDescription = "Chat",
                         modifier = Modifier
                             .size(300.dp)
@@ -792,6 +808,7 @@ fun CatInteractionPreview() {
             modifier = Modifier,
             cat = Cat(
                 name = "Minou",
+                color = "chat_banc_noir.png",
                 happiness = 50,
                 cleanliness = 50,
                 affection = 0.5f,

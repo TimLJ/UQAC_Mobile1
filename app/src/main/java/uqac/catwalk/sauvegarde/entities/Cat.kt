@@ -18,6 +18,7 @@ data class Cat(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
+    val color: String,
     var happiness: Int,
     var cleanliness: Int,
     var affection: Float,
