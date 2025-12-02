@@ -17,15 +17,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,7 +43,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,7 +80,9 @@ class WalkActivity : ComponentActivity() {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ProgressContent(
-                        modifier = Modifier.padding(innerPadding),
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(colorResource(R.color.yellow_white)),
                         context = this
                     )
                 }
@@ -178,7 +185,8 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(16.dp, 16.dp, 16.dp, 0.dp),
+                .padding(16.dp, 16.dp, 16.dp, 0.dp)
+                .background(color = colorResource(R.color.yellow_white)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -189,8 +197,8 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
                 textAlign = TextAlign.Center
             )
             Image(
-                painter = painterResource(id = android.R.drawable.ic_dialog_info),
-                contentDescription = "Image temporaire",
+                painter = painterResource(id = R.drawable.walk_icon),
+                contentDescription = "Chat noir de profil qui marche.",
                 modifier = Modifier.size(150.dp)
             )
             Column(
@@ -222,6 +230,9 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
                     isServiceRunning = false
                     context.startActivity(intent)
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(R.color.red)
+                ),
                 modifier = Modifier
                     .padding(16.dp)
                     .width(200.dp)

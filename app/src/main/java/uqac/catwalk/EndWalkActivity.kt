@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -23,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,7 +45,9 @@ class EndWalkActivity : ComponentActivity() {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WalkContent(
-                        modifier = Modifier.padding(innerPadding),
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(colorResource(R.color.yellow_white)),
                         intent = intent,
                     )
                 }
@@ -65,7 +70,8 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .background(color = colorResource(R.color.yellow_white)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -103,7 +109,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
         // Bouton de retour
         Button(
             onClick = {
-                coroutineScope.launch { 
+                coroutineScope.launch {
                     addDistance(distance.toInt(), context)
                     updtMoney(pièces, context)
                     //ajouter l'affection du chat
@@ -112,6 +118,9 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
                     context.startActivity(intent)
                 }
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(R.color.light_blue)
+            ),
             modifier = Modifier
                 .padding(16.dp)
                 .width(200.dp)
