@@ -1,6 +1,5 @@
 package uqac.catwalk
 
-import android.R.attr.priority
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,7 +9,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.renderscript.RenderScript
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,9 +34,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,32 +47,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ServiceCompat.startForeground
-import androidx.core.content.ContextCompat.getSystemService
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
-import uqac.catwalk.ui.theme.CatwalkTheme
-import kotlin.random.Random
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import uqac.catwalk.ui.theme.CatwalkTheme
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
-import com.google.android.gms.location.Priority
 
 class WalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
