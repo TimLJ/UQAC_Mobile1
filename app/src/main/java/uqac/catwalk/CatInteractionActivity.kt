@@ -66,12 +66,10 @@ class CatInteractionActivity : ComponentActivity() {
                 val cat by catDao.getCatById(catId).collectAsState(initial = null)
                 // 3. Afficher le contenu uniquement quand le chat est chargé
                 cat?.let { loadedCat ->
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        CatInteractionContent(
+                    CatInteractionContent(
                             cat = loadedCat,
-                            modifier = Modifier.padding(innerPadding),
+                            modifier = Modifier
                         )
-                    }
                 } ?: run {
                     // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -95,19 +93,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     var amusement = cat.happiness
     var affection = cat.affection
 
-
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
     var isPlaying by remember { mutableStateOf(false) }
 
-    // Bounds du chat calculés sur l'image principale (coordonnées fenêtre)
     var catBounds by remember { mutableStateOf(Rect(0f, 0f, 0f, 0f)) }
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF)),
-        // Bandeau supérieur
         topBar = {
             AppTopBar(
                 context = context,
@@ -115,17 +110,116 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .height(80.dp)
             )
+        },
+        bottomBar = {
+            // Barre d'actions placée dans bottomBar pour que Scaffold réserve l'espace correctement
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .height(100.dp)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable {
+                            isPlaying = true
+                            isWashing = false
+                            isPetting = false
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = "Jouer",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Jouer", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+
+                VerticalDivider(
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                    thickness = 1.dp,
+                    modifier = Modifier.fillMaxHeight()
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable {
+                            isWashing = true
+                            isPetting = false
+                            isPlaying = false
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PlayArrow,
+                            contentDescription = "Laver",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Laver", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+
+                VerticalDivider(
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                    thickness = 1.dp,
+                    modifier = Modifier.fillMaxHeight()
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable {
+                            isPetting = true
+                            isWashing = false
+                            isPlaying = false
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FavoriteBorder,
+                            contentDescription = "Caresser",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Caresser", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            }
         }
-    ) {
-            paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                top = 110.dp,
-                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                bottom = 50.dp
-            )
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                    top = paddingValues.calculateTopPadding() + 8.dp, // ajoute +8.dp si tu veux un espace supplémentaire
+                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                    bottom = paddingValues.calculateBottomPadding()
+                )
         ) {
             // Bouton Retour
             IconButton(
@@ -146,11 +240,11 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             }
             // Contenu principal
             Column(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Nom du chat
                 Text(
                     text = catName ?: "Chat Inconnu",
                     style = MaterialTheme.typography.headlineSmall,
@@ -160,7 +254,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         .padding(top = 8.dp),
                     textAlign = TextAlign.Center
                 )
-                // Affection en cœurs
+                // Cœurs d'affection
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
@@ -182,7 +276,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     }
                 }
 
-                // Image du chat principale
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -204,7 +297,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                             },
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
-                    if ( proprete < 30 ) {
+                    if (proprete < 30) {
                         Image(
                             painter = painterResource(R.drawable.salete3),
                             contentDescription = "Saleté",
@@ -213,8 +306,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    }
-                    else if ( proprete < 60 ) {
+                    } else if (proprete < 60) {
                         Image(
                             painter = painterResource(R.drawable.salete2),
                             contentDescription = "Saleté",
@@ -223,8 +315,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    }
-                    else if ( proprete < 80 ) {
+                    } else if (proprete < 80) {
                         Image(
                             painter = painterResource(R.drawable.salete1),
                             contentDescription = "Saleté",
@@ -235,7 +326,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
-                // Barres de progression
+
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
@@ -269,124 +360,24 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(72.dp)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    // Bouton Jouer -> active le mode jeu
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { isPlaying = true
-                                       isWashing  = false
-                                       isPetting  = false },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "Jouer",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("Jouer", color = MaterialTheme.colorScheme.onPrimary)
-                        }
-                    }
-
-                    VerticalDivider(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                        thickness = 1.dp,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                    )
-
-                    // Bouton Laver -> active le mode lavage
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { isWashing = true
-                                       isPetting = false
-                                       isPlaying  = false },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = "Laver",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("Laver", color = MaterialTheme.colorScheme.onPrimary)
-                        }
-                    }
-
-                    VerticalDivider(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                        thickness = 1.dp,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                    )
-
-                    // Caresser
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { isPetting = true
-                                       isWashing  = false
-                                       isPlaying  = false },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.FavoriteBorder,
-                                contentDescription = "Caresser",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("Caresser", color = MaterialTheme.colorScheme.onPrimary)
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp)) // espace avant le bottomBar réservé par Scaffold
             }
 
-            // Overlay mode lavage
             if (isWashing) {
                 isPetting = false
                 isPlaying = false
                 WashingOverlay(
                     initialProprete = proprete,
                     catBounds = catBounds,
-                    onPropreteChange = {newCleanliness -> // Mettre à jour la propreté du chat dans la BDD
-                        cat?.let { nonNullCat ->
-                            scope.launch(Dispatchers.IO) {
-                                catDao.updateCatCleanliness(
-                                    id = nonNullCat.id,
-                                    cleanliness = newCleanliness
-                                )
-                            }
+                    onPropreteChange = { newCleanliness ->
+                        scope.launch(Dispatchers.IO) {
+                            catDao.updateCatCleanliness(id = cat.id, cleanliness = newCleanliness)
                         }
                     },
                     onClose = { isWashing = false }
                 )
             }
-            // Overlay mode caresse
+
             if (isPetting) {
                 isWashing = false
                 isPlaying = false
@@ -396,7 +387,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 )
             }
 
-            // Overlay mode jeu
             if (isPlaying) {
                 isWashing = false
                 isPetting = false
@@ -404,13 +394,8 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     initialAmusement = amusement,
                     catBounds = catBounds,
                     onAmusementChange = { newAmusement ->
-                        cat?.let { nonNullCat ->
-                            scope.launch(Dispatchers.IO) {
-                                catDao.updateCatHappiness(
-                                    id = nonNullCat.id,
-                                    happiness = newAmusement
-                                )
-                            }
+                        scope.launch(Dispatchers.IO) {
+                            catDao.updateCatHappiness(id = cat.id, happiness = newAmusement)
                         }
                     },
                     onClose = { isPlaying = false }
@@ -419,6 +404,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
         }
     }
 }
+
 
 @Composable
 private fun HeartItem(
