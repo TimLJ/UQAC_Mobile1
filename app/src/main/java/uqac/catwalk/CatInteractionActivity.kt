@@ -543,7 +543,7 @@ fun WashingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp)
+                .padding(bottom = 10.dp)
         ) {
             Text("Terminer")
         }
@@ -660,7 +660,7 @@ fun PettingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp)
+                .padding(bottom = 10.dp)
         ) {
             Text("Terminer")
         }
@@ -776,7 +776,7 @@ fun PlayingOverlay(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp)
+                .padding(bottom = 10.dp)
         ) {
             Text("Terminer")
         }
