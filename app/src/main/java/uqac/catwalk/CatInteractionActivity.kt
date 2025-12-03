@@ -76,12 +76,13 @@ class CatInteractionActivity : ComponentActivity() {
             return
         }
         setContent {
+            // Récupérer les données du chat depuis la BDD
+            val database = AppDatabase.getDatabase(context = this)
+            val catDao = database.CatDao()
+            val cat by catDao.getCatById(catId).collectAsState(initial = null)
+
             CatwalkTheme {
-                // 2. Récupérer les données du chat depuis la BDD
-                val database = AppDatabase.getDatabase(context = this)
-                val catDao = database.CatDao()
-                val cat by catDao.getCatById(catId).collectAsState(initial = null)
-                // 3. Afficher le contenu uniquement quand le chat est chargé
+                // Afficher le contenu uniquement quand le chat est chargé
                 cat?.let { loadedCat ->
                     CatInteractionContent(
                             cat = loadedCat,
@@ -292,7 +293,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
-
+                // Image du chat avec saleté superposée
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -323,7 +324,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    } else if (proprete < 150) {
+                    } else if (proprete < 200) {
                         Image(
                             painter = painterResource(R.drawable.salete2),
                             contentDescription = "Saleté",
@@ -332,7 +333,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                                 .padding(16.dp),
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
                         )
-                    } else if (proprete < 225) {
+                    } else if (proprete < 290) {
                         Image(
                             painter = painterResource(R.drawable.salete1),
                             contentDescription = "Saleté",
@@ -353,11 +354,11 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Propreté", fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(
-                        progress = { proprete / 500f },
+                        progress = { proprete / 300f },
                         modifier = Modifier
-                                                        .width(130.dp)
-                                                        .height(10.dp)
-                                                        .padding(top = 4.dp),
+                            .width(130.dp)
+                            .height(10.dp)
+                            .padding(top = 4.dp),
                         color = Color(0xFF4CAF50),
                         trackColor = Color(0xFFC8E6C9),
                         strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
@@ -393,6 +394,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     },
                     onClose = { isWashing = false }
                 )
+
             }
 
             if (isPetting) {
@@ -509,6 +511,7 @@ fun WashingOverlay(
                         )
 
                         if (spongeRectWindow.overlaps(catBounds)) {
+                            // augmenter la propreté
                             proprete = (proprete + 1).coerceAtMost(100)
                             onPropreteChange(proprete)
                         }
@@ -572,6 +575,8 @@ fun PettingOverlay(
     catBounds: Rect,
     onClose: () -> Unit
 ) {
+    val context = LocalContext.current
+
     var overlayPosX by remember { mutableFloatStateOf(0f) }
     var overlayPosY by remember { mutableFloatStateOf(0f) }
 
@@ -586,6 +591,19 @@ fun PettingOverlay(
     // cooldown pour éviter plusieurs ajouts trop rapides
     var lastPetTime by remember { mutableLongStateOf(0L) }
     val cooldownMs = 500L
+
+    // état du ronronnement
+    var isPurring by remember { mutableStateOf(false) }
+
+    // s'assurer d'arrêter le son quand le composable est détruit
+    DisposableEffect(Unit) {
+        onDispose {
+            if (isPurring) {
+                SoundPlayer.stop()
+                isPurring = false
+            }
+        }
+    }
 
     Box(
         Modifier
@@ -613,9 +631,18 @@ fun PettingOverlay(
                             val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
                             val heartY = (catBounds.top) - overlayPosY - 40f
                             hearts.add(Heart(System.nanoTime(), heartX, heartY))
+                            // démarrer le ronronnement si nécessaire
+                            if (!isPurring) {
+                                SoundPlayer.start(context, "ronronnement", loop = true)
+                                isPurring = true
+                            }
                         }
-
                         tryAwaitRelease()
+                        // arrêter le ronronnement au release
+                        if (isPurring) {
+                            SoundPlayer.stop()
+                            isPurring = false
+                        }
                     }
                 )
             }
@@ -646,6 +673,25 @@ fun PettingOverlay(
                             val heartY = (catBounds.top) - overlayPosY - 40f
                             hearts.add(Heart(System.nanoTime(), heartX, heartY))
                         }
+
+                        // démarrer le ronronnement dès que la main touche le chat pendant le drag
+                        if (handRect.overlaps(catBounds) && !isPurring) {
+                            SoundPlayer.start(context, "ronronnement", loop = true)
+                            isPurring = true
+                        }
+                    },
+                    onDragEnd = {
+                        // arrêter le ronronnement à la fin du drag
+                        if (isPurring) {
+                            SoundPlayer.stop()
+                            isPurring = false
+                        }
+                    },
+                    onDragCancel = {
+                        if (isPurring) {
+                            SoundPlayer.stop()
+                            isPurring = false
+                        }
                     }
                 )
             }
@@ -674,7 +720,14 @@ fun PettingOverlay(
 
         // Bouton pour fermer
         Button(
-            onClick = onClose,
+            onClick = {
+                // arrêter le son si nécessaire puis fermer
+                if (isPurring) {
+                    SoundPlayer.stop()
+                    isPurring = false
+                }
+                onClose()
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 10.dp)
@@ -772,7 +825,7 @@ fun PlayingOverlay(
 
                         // détection contact plumeau/chat en coordonnées fenêtre
                         if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(500)
+                            amusement = (amusement + 1).coerceAtMost(300)
                             onAmusementChange(amusement)
                         }
                     }
