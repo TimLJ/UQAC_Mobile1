@@ -12,7 +12,7 @@ object SoundPlayer {
     private var currentResId: Int = 0
 
     /**
-     * Démarre le son par resId (préférable).
+     * Démarre le son par resId
      */
     fun start(context: Context, @RawRes resId: Int, loop: Boolean = false) {
         val appCtx = context.applicationContext

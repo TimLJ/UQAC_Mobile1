@@ -460,6 +460,8 @@ fun WashingOverlay(
     onPropreteChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
+    val context = LocalContext.current
+
     var proprete by remember { mutableIntStateOf(initialProprete) }
 
     // Position de l'éponge relative au coin supérieur gauche du parent
@@ -472,6 +474,19 @@ fun WashingOverlay(
 
     val density = LocalDensity.current
     val spongeSizePx = with(density) { 120.dp.toPx() }
+
+    // état du ronronnement
+    var isWashing by remember { mutableStateOf(false) }
+
+    // s'assurer d'arrêter le son quand le composable est détruit
+    DisposableEffect(Unit) {
+        onDispose {
+            if (isWashing) {
+                SoundPlayer.stop()
+                isWashing = false
+            }
+        }
+    }
 
     // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre l'éponge dessus
     LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
@@ -514,6 +529,11 @@ fun WashingOverlay(
                             // augmenter la propreté
                             proprete = (proprete + 1).coerceAtMost(100)
                             onPropreteChange(proprete)
+                            // démarrer le ronronnement si nécessaire
+                            if (!isWashing) {
+                                SoundPlayer.start(context, "sponge", loop = true)
+                                isWashing = true
+                            }
                         }
 
                         tryAwaitRelease() // attend le release si nécessaire
@@ -545,6 +565,19 @@ fun WashingOverlay(
                             proprete = (proprete + 1).coerceAtMost(300)
                             onPropreteChange(proprete)
                         }
+                    },
+                    onDragEnd = {
+                        // arrêter le ronronnement à la fin du drag
+                        if (isWashing) {
+                            SoundPlayer.stop()
+                            isWashing = false
+                        }
+                    },
+                    onDragCancel = {
+                        if (isWashing) {
+                            SoundPlayer.stop()
+                            isWashing = false
+                        }
                     }
                 )
             }
@@ -560,7 +593,14 @@ fun WashingOverlay(
 
         // Bouton Terminer — en bas au centre
         Button(
-            onClick = onClose,
+            onClick = {
+                // arrêter le son si nécessaire puis fermer
+                if (isWashing) {
+                    SoundPlayer.stop()
+                    isWashing = false
+                }
+                onClose()
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 10.dp)
