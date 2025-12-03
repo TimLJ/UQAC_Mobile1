@@ -25,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -41,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -447,172 +447,25 @@ private fun HeartItem(
         painter = painterResource(R.drawable.petits_coeurs),
         contentDescription = "Cœurs",
         modifier = Modifier
-            .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
+            .offset { IntOffset(startX.toInt(), (startY + animY.value).toInt()) }
             .size(heartSize)
             .graphicsLayer { alpha = animAlpha.value }
     )
 }
 
 @Composable
-fun WashingOverlay(
-    initialProprete: Int,
+fun InteractionOverlay(
     catBounds: Rect,
-    onPropreteChange: (Int) -> Unit,
-    onClose: () -> Unit
-) {
-    val context = LocalContext.current
-
-    var proprete by remember { mutableIntStateOf(initialProprete) }
-
-    // Position de l'éponge relative au coin supérieur gauche du parent
-    var spongeX by remember { mutableFloatStateOf(50f) }
-    var spongeY by remember { mutableFloatStateOf(50f) }
-
-    // Position de l'overlay dans la fenêtre
-    var overlayPosX by remember { mutableFloatStateOf(0f) }
-    var overlayPosY by remember { mutableFloatStateOf(0f) }
-
-    val density = LocalDensity.current
-    val spongeSizePx = with(density) { 120.dp.toPx() }
-
-    // état du ronronnement
-    var isWashing by remember { mutableStateOf(false) }
-
-    // s'assurer d'arrêter le son quand le composable est détruit
-    DisposableEffect(Unit) {
-        onDispose {
-            if (isWashing) {
-                SoundPlayer.stop()
-                isWashing = false
-            }
-        }
-    }
-
-    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre l'éponge dessus
-    LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
-        if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
-            val catCenterX = catBounds.left + catBounds.width / 2f
-            val catCenterY = catBounds.top + catBounds.height / 2f
-            spongeX = catCenterX - overlayPosX - spongeSizePx / 2f
-            spongeY = catCenterY - overlayPosY - spongeSizePx / 2f
-        }
-    }
-
-    // Boîte transparente — capte taps et drags sur toute la zone
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp)
-            .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
-                overlayPosX = pos.x
-                overlayPosY = pos.y
-            }
-            .pointerInput(Unit) {
-                // positionne à l'appui et suit le doigt pendant le drag
-                detectTapGestures(
-                    onPress = { offset ->
-                        // offset est local au Box
-                        spongeX = offset.x - spongeSizePx / 2f
-                        spongeY = offset.y - spongeSizePx / 2f
-
-                        // convertit rectangle de l'éponge en coordonnées fenêtre
-                        val spongeRectWindow = Rect(
-                            spongeX + overlayPosX,
-                            spongeY + overlayPosY,
-                            spongeX + overlayPosX + spongeSizePx,
-                            spongeY + overlayPosY + spongeSizePx
-                        )
-
-                        if (spongeRectWindow.overlaps(catBounds)) {
-                            // augmenter la propreté
-                            proprete = (proprete + 1).coerceAtMost(100)
-                            onPropreteChange(proprete)
-                            // démarrer le ronronnement si nécessaire
-                            if (!isWashing) {
-                                SoundPlayer.start(context, "sponge", loop = true)
-                                isWashing = true
-                            }
-                        }
-
-                        tryAwaitRelease() // attend le release si nécessaire
-                    }
-                )
-            }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        // centrer l'éponge sous le doigt au démarrage du drag
-                        spongeX = offset.x - spongeSizePx / 2f
-                        spongeY = offset.y - spongeSizePx / 2f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        spongeX += dragAmount.x
-                        spongeY += dragAmount.y
-
-                        // convertit rectangle de l'éponge en coordonnées fenêtre
-                        val spongeRectWindow = Rect(
-                            spongeX + overlayPosX,
-                            spongeY + overlayPosY,
-                            spongeX + overlayPosX + spongeSizePx,
-                            spongeY + overlayPosY + spongeSizePx
-                        )
-
-                        // détection contact éponge/chat en coordonnées fenêtre
-                        if (spongeRectWindow.overlaps(catBounds)) {
-                            proprete = (proprete + 1).coerceAtMost(300)
-                            onPropreteChange(proprete)
-                        }
-                    },
-                    onDragEnd = {
-                        // arrêter le ronronnement à la fin du drag
-                        if (isWashing) {
-                            SoundPlayer.stop()
-                            isWashing = false
-                        }
-                    },
-                    onDragCancel = {
-                        if (isWashing) {
-                            SoundPlayer.stop()
-                            isWashing = false
-                        }
-                    }
-                )
-            }
-    ) {
-        // Éponge affichée au‑dessus
-        Image(
-            painter = painterResource(R.drawable.eponge),
-            contentDescription = "Éponge",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
-        )
-
-        // Bouton Terminer — en bas au centre
-        Button(
-            onClick = {
-                // arrêter le son si nécessaire puis fermer
-                if (isWashing) {
-                    SoundPlayer.stop()
-                    isWashing = false
-                }
-                onClose()
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 10.dp)
-        ) {
-            Text("Terminer")
-        }
-    }
-}
-
-@Composable
-fun PettingOverlay(
-    catBounds: Rect,
+    handDrawable: Int,
+    handSizeDp: Dp = 120.dp,
+    soundName: String? = null,
+    cooldownMs: Long = 0L,
+    onHit: (
+        windowHandRect: Rect,
+        addEffect: (Heart) -> Unit
+    ) -> Unit = { _, _ -> },
+    effects: List<Heart> = emptyList(),
+    onEffectsChange: (List<Heart>) -> Unit = {},
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -621,26 +474,30 @@ fun PettingOverlay(
     var overlayPosY by remember { mutableFloatStateOf(0f) }
 
     val density = LocalDensity.current
-    val handSizePx = with(density) { 120.dp.toPx() }
+    val handSizePx = with(density) { handSizeDp.toPx() }
     var handX by remember { mutableFloatStateOf(50f) }
     var handY by remember { mutableFloatStateOf(50f) }
 
-    // liste de coeurs à afficher
-    val hearts = remember { mutableStateListOf<Heart>() }
+    var lastHitTime by remember { mutableLongStateOf(0L) }
 
-    // cooldown pour éviter plusieurs ajouts trop rapides
-    var lastPetTime by remember { mutableLongStateOf(0L) }
-    val cooldownMs = 500L
+    // état du son
+    var isSoundPlaying by remember { mutableStateOf(false) }
 
-    // état du ronronnement
-    var isPurring by remember { mutableStateOf(false) }
-
-    // s'assurer d'arrêter le son quand le composable est détruit
     DisposableEffect(Unit) {
         onDispose {
-            if (isPurring) {
+            if (isSoundPlaying) {
                 SoundPlayer.stop()
-                isPurring = false
+                isSoundPlaying = false
+            }
+        }
+    }
+
+    fun handleHit(rect: Rect) {
+        val now = System.currentTimeMillis()
+        if (now - lastHitTime > cooldownMs) {
+            lastHitTime = now
+            onHit(rect) { heart ->
+                onEffectsChange(effects + heart)
             }
         }
     }
@@ -650,44 +507,43 @@ fun PettingOverlay(
             .fillMaxSize()
             .padding(bottom = 100.dp)
             .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
+            .onGloballyPositioned {
+                val pos = it.positionInWindow()
                 overlayPosX = pos.x
                 overlayPosY = pos.y
             }
             .pointerInput(Unit) {
-                // tap pour positionner la main et créer un coeur si sur le chat
                 detectTapGestures(
                     onPress = { tapOffset ->
-                        val windowX = tapOffset.x + overlayPosX
-                        val windowY = tapOffset.y + overlayPosY
-                        val now = System.currentTimeMillis()
-                        // positionne la main centrée sous le doigt
                         handX = tapOffset.x - handSizePx / 2f
                         handY = tapOffset.y - handSizePx / 2f
 
-                        if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
-                            lastPetTime = now
-                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                            val heartY = (catBounds.top) - overlayPosY - 40f
-                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                            // démarrer le ronronnement si nécessaire
-                            if (!isPurring) {
-                                SoundPlayer.start(context, "ronronnement", loop = true)
-                                isPurring = true
+                        val rect = Rect(
+                            handX + overlayPosX,
+                            handY + overlayPosY,
+                            handX + overlayPosX + handSizePx,
+                            handY + overlayPosY + handSizePx
+                        )
+
+                        if (rect.overlaps(catBounds)) {
+                            handleHit(rect)
+
+                            if (soundName != null && !isSoundPlaying) {
+                                SoundPlayer.start(context, soundName, loop = true)
+                                isSoundPlaying = true
                             }
                         }
+
                         tryAwaitRelease()
-                        // arrêter le ronronnement au release
-                        if (isPurring) {
+
+                        if (isSoundPlaying) {
                             SoundPlayer.stop()
-                            isPurring = false
+                            isSoundPlaying = false
                         }
                     }
                 )
             }
             .pointerInput(Unit) {
-                // drag pour suivre le doigt et générer des coeurs en collision
                 detectDragGestures(
                     onDragStart = { offset ->
                         handX = offset.x - handSizePx / 2f
@@ -698,73 +554,62 @@ fun PettingOverlay(
                         handX += dragAmount.x
                         handY += dragAmount.y
 
-                        // rectangle de la main en coords fenêtre
-                        val handRect = Rect(
+                        val rect = Rect(
                             handX + overlayPosX,
                             handY + overlayPosY,
                             handX + overlayPosX + handSizePx,
                             handY + overlayPosY + handSizePx
                         )
 
-                        val now = System.currentTimeMillis()
-                        if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
-                            lastPetTime = now
-                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                            val heartY = (catBounds.top) - overlayPosY - 40f
-                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                        }
+                        if (rect.overlaps(catBounds)) {
+                            handleHit(rect)
 
-                        // démarrer le ronronnement dès que la main touche le chat pendant le drag
-                        if (handRect.overlaps(catBounds) && !isPurring) {
-                            SoundPlayer.start(context, "ronronnement", loop = true)
-                            isPurring = true
+                            if (soundName != null && !isSoundPlaying) {
+                                SoundPlayer.start(context, soundName, loop = true)
+                                isSoundPlaying = true
+                            }
                         }
                     },
                     onDragEnd = {
-                        // arrêter le ronronnement à la fin du drag
-                        if (isPurring) {
+                        if (isSoundPlaying) {
                             SoundPlayer.stop()
-                            isPurring = false
+                            isSoundPlaying = false
                         }
                     },
                     onDragCancel = {
-                        if (isPurring) {
+                        if (isSoundPlaying) {
                             SoundPlayer.stop()
-                            isPurring = false
+                            isSoundPlaying = false
                         }
                     }
                 )
             }
     ) {
-        // Main déplaçable affichée (positionnée par le Box pointerInput)
         Image(
-            painter = painterResource(R.drawable.main),
-            contentDescription = "Main",
+            painter = painterResource(handDrawable),
+            contentDescription = null,
             modifier = Modifier
-                .size(64.dp)
+                .size(handSizeDp)
                 .offset { IntOffset(handX.toInt(), handY.toInt()) }
         )
 
-        // Rendu des coeurs animés
-        hearts.forEach { heart ->
+        // Affichage des effets (ex: cœurs)
+        effects.forEach { heart ->
             key(heart.id) {
                 HeartItem(
-                    startX = heart.x,
-                    startY = heart.y,
+                    startX = heart.x - overlayPosX - 290f,
+                    startY = heart.y - overlayPosY,
                     onFinished = { finishedId ->
-                        hearts.removeAll { it.id == finishedId }
+                        onEffectsChange(effects.filter { it.id != finishedId })
                     }
                 )
             }
         }
 
-        // Bouton pour fermer
         Button(
             onClick = {
-                // arrêter le son si nécessaire puis fermer
-                if (isPurring) {
+                if (isSoundPlaying) {
                     SoundPlayer.stop()
-                    isPurring = false
                 }
                 onClose()
             },
@@ -777,6 +622,64 @@ fun PettingOverlay(
     }
 }
 
+
+@Composable
+fun WashingOverlay(
+    initialProprete: Int,
+    catBounds: Rect,
+    onPropreteChange: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    var proprete by remember { mutableIntStateOf(initialProprete) }
+
+    InteractionOverlay(
+        catBounds = catBounds,
+        handDrawable = R.drawable.eponge,
+        handSizeDp = 120.dp,
+        soundName = "sponge",
+        cooldownMs = 0L,
+        effects = emptyList(),
+        onEffectsChange = {},
+        onHit = { _, _ ->
+            proprete = (proprete + 1).coerceAtMost(300)
+            onPropreteChange(proprete)
+        },
+        onClose = onClose
+    )
+}
+
+
+@Composable
+fun PettingOverlay(
+    catBounds: Rect,
+    onClose: () -> Unit
+) {
+    val hearts = remember { mutableStateListOf<Heart>() }
+
+    InteractionOverlay(
+        catBounds = catBounds,
+        handDrawable = R.drawable.main,
+        handSizeDp = 64.dp,
+        soundName = "ronronnement",
+        cooldownMs = 500L,
+        effects = hearts,
+        onEffectsChange = { newList ->
+            hearts.clear()
+            hearts.addAll(newList)
+        },
+        onHit = { _, addEffect ->
+            val heart = Heart(
+                id = System.nanoTime(),
+                x = (catBounds.left + catBounds.width / 2f),
+                y = (catBounds.top - 40f)
+            )
+            addEffect(heart)
+        },
+        onClose = onClose
+    )
+}
+
+
 @Composable
 fun PlayingOverlay(
     initialAmusement: Int,
@@ -786,113 +689,21 @@ fun PlayingOverlay(
 ) {
     var amusement by remember { mutableIntStateOf(initialAmusement) }
 
-    // Position du plumeau relative au coin supérieur gauche du parent
-    var toyX by remember { mutableFloatStateOf(50f) }
-    var toyY by remember { mutableFloatStateOf(50f) }
-
-    // Position de l'overlay dans la fenêtre
-    var overlayPosX by remember { mutableFloatStateOf(0f) }
-    var overlayPosY by remember { mutableFloatStateOf(0f) }
-
-    val density = LocalDensity.current
-    val toySizePx = with(density) { 120.dp.toPx() }
-
-    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre le plumeau dessus
-    LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
-        if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
-            val catCenterX = catBounds.left + catBounds.width / 2f
-            val catCenterY = catBounds.top + catBounds.height / 2f
-            toyX = catCenterX - overlayPosX - toySizePx / 2f
-            toyY = catCenterY - overlayPosY - toySizePx / 2f
-        }
-    }
-
-    // Boîte transparente — capte taps et drags sur toute la zone
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp)
-            .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
-                overlayPosX = pos.x
-                overlayPosY = pos.y
-            }
-            .pointerInput(Unit) {
-                // positionne à l'appui et suit le doigt pendant le drag
-                detectTapGestures(
-                    onPress = { offset ->
-                        // offset est local au Box
-                        toyX = offset.x - toySizePx / 2f
-                        toyY = offset.y - toySizePx / 2f
-
-                        // convertit rectangle du plumeau en coordonnées fenêtre
-                        val toyRectWindow = Rect(
-                            toyX + overlayPosX,
-                            toyY + overlayPosY,
-                            toyX + overlayPosX + toySizePx,
-                            toyY + overlayPosY + toySizePx
-                        )
-
-                        if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(100)
-                            onAmusementChange(amusement)
-                        }
-
-                        tryAwaitRelease() // attend le release si nécessaire
-                    }
-                )
-            }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        // centrer le plumeau sous le doigt au démarrage du drag
-                        toyX = offset.x - toySizePx / 2f
-                        toyY = offset.y - toySizePx / 2f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        toyX += dragAmount.x
-                        toyY += dragAmount.y
-
-                        // convertit rectangle du plumeau en coordonnées fenêtre
-                        val toyRectWindow = Rect(
-                            toyX + overlayPosX,
-                            toyY + overlayPosY,
-                            toyX + overlayPosX + toySizePx,
-                            toyY + overlayPosY + toySizePx
-                        )
-
-                        // détection contact plumeau/chat en coordonnées fenêtre
-                        if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(300)
-                            onAmusementChange(amusement)
-                        }
-                    }
-                )
-            }
-    ) {
-        // Plumeau affichée au‑dessus
-        Image(
-            painter = painterResource(R.drawable.plumeau),
-            contentDescription = "Plumeau",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(toyX.toInt(), toyY.toInt()) }
-        )
-
-        // Bouton Terminer — en bas au centre
-        Button(
-            onClick = onClose,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 10.dp)
-        ) {
-            Text("Terminer")
-        }
-    }
+    InteractionOverlay(
+        catBounds = catBounds,
+        handDrawable = R.drawable.plumeau,
+        handSizeDp = 120.dp,
+        soundName = "plumeau",
+        cooldownMs = 0L,
+        effects = emptyList(),
+        onEffectsChange = {},
+        onHit = { _, _ ->
+            amusement = (amusement + 1).coerceAtMost(300)
+            onAmusementChange(amusement)
+        },
+        onClose = onClose
+    )
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
