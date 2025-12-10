@@ -43,6 +43,13 @@ interface CatDao {
     @Query("UPDATE cats SET achievementId = :achievementId WHERE id = :id")
     suspend fun updateCatAchievementId(id: Int, achievementId: Int?)
 
+    @Query("UPDATE cats SET cleanliness = :cleanliness, last_decay_at = :lastDecayAt WHERE id = :id")
+    suspend fun updateCatCleanlinessAndLastDecay(id: Int, cleanliness: Int, lastDecayAt: Long)
+
+    @Query("UPDATE cats SET happiness = :happiness, last_decay_at = :lastDecayAt WHERE id = :id")
+    suspend fun updateCatHappinessAndLastDecay(id: Int, happiness: Int, lastDecayAt: Long)
+
+
     @Query("UPDATE cats SET obtenu = :obtenu WHERE id = :id")
     suspend fun updateCatObtenu(id: Int, obtenu: Boolean)
 }

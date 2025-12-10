@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.max
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.theme.CatwalkTheme
@@ -80,6 +81,25 @@ class CatInteractionActivity : ComponentActivity() {
             val database = AppDatabase.getDatabase(context = this)
             val catDao = database.CatDao()
             val cat by catDao.getCatById(catId).collectAsState(initial = null)
+
+            val DECAY_PER_DAY = 5 // Valeur de dégradation par jour
+            val DAY_MS = 24L * 60L * 60L * 1000L
+            val scope = rememberCoroutineScope()
+
+            LaunchedEffect(cat) {
+                val loaded = cat ?: return@LaunchedEffect
+                val now = System.currentTimeMillis()
+                val days = ((now - loaded.lastDecayAt) / DAY_MS).toInt()
+                if (days > 0) {
+                    val decay = days * DECAY_PER_DAY
+                    val newCleanliness = max(0, loaded.cleanliness - decay)
+                    val newHappiness = max(0, loaded.happiness - decay)
+                    scope.launch(Dispatchers.IO) {
+                        catDao.updateCatCleanlinessAndLastDecay(loaded.id, newCleanliness, now)
+                        catDao.updateCatHappinessAndLastDecay(loaded.id, newHappiness, now)
+                    }
+                }
+            }
 
             CatwalkTheme {
                 // Afficher le contenu uniquement quand le chat est chargé
@@ -389,7 +409,8 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     catBounds = catBounds,
                     onPropreteChange = { newCleanliness ->
                         scope.launch(Dispatchers.IO) {
-                            catDao.updateCatCleanliness(id = cat.id, cleanliness = newCleanliness)
+                            catDao.updateCatCleanlinessAndLastDecay(id = cat.id, cleanliness = newCleanliness, lastDecayAt = System.currentTimeMillis())
+
                         }
                     },
                     onClose = { isWashing = false }
@@ -414,7 +435,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     catBounds = catBounds,
                     onAmusementChange = { newAmusement ->
                         scope.launch(Dispatchers.IO) {
-                            catDao.updateCatHappiness(id = cat.id, happiness = newAmusement)
+                            catDao.updateCatHappinessAndLastDecay(id = cat.id, happiness = newAmusement, lastDecayAt = System.currentTimeMillis())
                         }
                     },
                     onClose = { isPlaying = false }
