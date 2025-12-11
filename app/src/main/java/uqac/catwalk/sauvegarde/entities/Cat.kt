@@ -30,5 +30,7 @@ data class Cat(
     var achievementId: Int?, // Nullable in case the cat has no achievement
     val obtenu: Boolean,
     @ColumnInfo(name = "last_decay_at")
-    val lastDecayAt: Long = System.currentTimeMillis()
+    val lastDecayAt: Long = System.currentTimeMillis(), // derniere fois ou les stats ont decaye
+    @ColumnInfo(name = "lastSeenAt")
+    val lastSeenAt: Long = System.currentTimeMillis() // frequence de visite
 ) : Parcelable

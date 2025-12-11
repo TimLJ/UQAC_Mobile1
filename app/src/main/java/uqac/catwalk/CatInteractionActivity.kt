@@ -94,9 +94,23 @@ class CatInteractionActivity : ComponentActivity() {
                     val decay = days * DECAY_PER_DAY
                     val newCleanliness = max(0, loaded.cleanliness - decay)
                     val newHappiness = max(0, loaded.happiness - decay)
+
+                    // calculer affection liée à la fréquence de visite
+                    val visitInc = when {
+                        now - loaded.lastSeenAt > 7 * DAY_MS -> 0.3f
+                        now - loaded.lastSeenAt > DAY_MS -> 0.1f
+                        else -> 0f
+                    }
+
+                    // pénalité si propreté / amusement trop bas
+                    val penalty = (if (newCleanliness < 50) 0.2f else 0f) + (if (newHappiness < 50) 0.2f else 0f)
+
+                    val newAffection = (loaded.affection + visitInc - penalty).coerceIn(0f, 3f)
+
                     scope.launch(Dispatchers.IO) {
                         catDao.updateCatCleanlinessAndLastDecay(loaded.id, newCleanliness, now)
                         catDao.updateCatHappinessAndLastDecay(loaded.id, newHappiness, now)
+                        catDao.updateCatAffectionAndLastSeen(loaded.id, newAffection, now)
                     }
                 }
             }
@@ -413,6 +427,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
 
                         }
                     },
+                    onAffectionIncrease = { delta ->
+                        scope.launch(Dispatchers.IO) {
+                            val now = System.currentTimeMillis()
+                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
+                        }
+                    },
                     onClose = { isWashing = false }
                 )
 
@@ -423,6 +444,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 isPlaying = false
                 PettingOverlay(
                     catBounds = catBounds,
+                    onAffectionIncrease = { delta ->
+                        scope.launch(Dispatchers.IO) {
+                            val now = System.currentTimeMillis()
+                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
+                        }
+                    },
                     onClose = { isPetting = false }
                 )
             }
@@ -436,6 +464,13 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     onAmusementChange = { newAmusement ->
                         scope.launch(Dispatchers.IO) {
                             catDao.updateCatHappinessAndLastDecay(id = cat.id, happiness = newAmusement, lastDecayAt = System.currentTimeMillis())
+                        }
+                    },
+                    onAffectionIncrease = { delta ->
+                        scope.launch(Dispatchers.IO) {
+                            val now = System.currentTimeMillis()
+                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
                         }
                     },
                     onClose = { isPlaying = false }
@@ -649,6 +684,7 @@ fun WashingOverlay(
     initialProprete: Int,
     catBounds: Rect,
     onPropreteChange: (Int) -> Unit,
+    onAffectionIncrease: (Float) -> Unit = {},
     onClose: () -> Unit
 ) {
     var proprete by remember { mutableIntStateOf(initialProprete) }
@@ -664,6 +700,7 @@ fun WashingOverlay(
         onHit = { _, _ ->
             proprete = (proprete + 1).coerceAtMost(300)
             onPropreteChange(proprete)
+            onAffectionIncrease(0.02f)
         },
         onClose = onClose
     )
@@ -673,7 +710,8 @@ fun WashingOverlay(
 @Composable
 fun PettingOverlay(
     catBounds: Rect,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onAffectionIncrease: (Float) -> Unit = {},
 ) {
     val hearts = remember { mutableStateListOf<Heart>() }
 
@@ -695,6 +733,7 @@ fun PettingOverlay(
                 y = (catBounds.top - 40f)
             )
             addEffect(heart)
+            onAffectionIncrease(0.08f)
         },
         onClose = onClose
     )
@@ -706,6 +745,7 @@ fun PlayingOverlay(
     initialAmusement: Int,
     catBounds: Rect,
     onAmusementChange: (Int) -> Unit,
+    onAffectionIncrease: (Float) -> Unit = {},
     onClose: () -> Unit
 ) {
     var amusement by remember { mutableIntStateOf(initialAmusement) }
@@ -721,6 +761,7 @@ fun PlayingOverlay(
         onHit = { _, _ ->
             amusement = (amusement + 1).coerceAtMost(300)
             onAmusementChange(amusement)
+            onAffectionIncrease(0.04f)
         },
         onClose = onClose
     )

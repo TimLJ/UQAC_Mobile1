@@ -49,6 +49,8 @@ interface CatDao {
     @Query("UPDATE cats SET happiness = :happiness, last_decay_at = :lastDecayAt WHERE id = :id")
     suspend fun updateCatHappinessAndLastDecay(id: Int, happiness: Int, lastDecayAt: Long)
 
+    @Query("UPDATE cats SET affection = :affection, lastSeenAt = :lastSeenAt WHERE id = :id")
+    suspend fun updateCatAffectionAndLastSeen(id: Int, affection: Float, lastSeenAt: Long)
 
     @Query("UPDATE cats SET obtenu = :obtenu WHERE id = :id")
     suspend fun updateCatObtenu(id: Int, obtenu: Boolean)
