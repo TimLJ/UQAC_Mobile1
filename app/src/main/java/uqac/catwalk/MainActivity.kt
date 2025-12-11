@@ -159,24 +159,12 @@ fun MainTopBar(
                             .border(BorderStroke(2.dp, colorResource(R.color.orange)))
                             .background(colorResource(R.color.white))
                             .offset(x = 5.dp, y = 5.dp)
-                            .clickable {
-                                coroutineScope.launch {
-                                    updtMoney(-50, context)
-                                }
-                                Toast.makeText(context, "Retrait", Toast.LENGTH_SHORT).show()
-                            }
                     )
                     Image(
                         painter = painterResource(R.drawable.paw_coin),
                         contentDescription = "Image de pièce chat",
                         modifier = Modifier
                             .size(55.dp)
-                            .clickable {
-                                coroutineScope.launch {
-                                    updtMoney(50, context)
-                                }
-                                Toast.makeText(context, "Ajout", Toast.LENGTH_SHORT).show()
-                            }
                     )
                 }
             }
