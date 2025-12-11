@@ -1,5 +1,6 @@
 package uqac.catwalk
 
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -71,8 +72,52 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import com.google.android.gms.location.Priority
 import android.provider.Settings
+import android.os.Binder
+import android.os.IBinder
+import android.content.ComponentName
+import android.content.ServiceConnection
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
+
 
 class WalkActivity : ComponentActivity() {
+    private var locationService: LocationService? by mutableStateOf(null)
+    private var isBound by mutableStateOf(false)
+
+    // Définit les callbacks pour la connexion au service
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as LocationService.LocationBinder
+            locationService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            locationService = null
+            isBound = false
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Lier au service lorsque l'activité devient visible
+        Intent(this, LocationService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Détacher le service lorsque l'activité n'est plus visible
+        if (isBound) {
+            unbindService(connection)
+            isBound = false
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -83,7 +128,8 @@ class WalkActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                             .background(colorResource(R.color.yellow_white)),
-                        context = this
+                        context = this,
+                        locationService = this.locationService,
                     )
                 }
             }
@@ -99,21 +145,23 @@ fun isLocationEnabled(context: Context): Boolean {
 
 
 @Composable
-fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
+fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationService: LocationService?) {
+
     var progress by remember { mutableDoubleStateOf(0.0) }
     val serviceIntent = remember { Intent(context, LocationService::class.java) }
-    var isServiceRunning by remember { mutableStateOf(false) }
 
     var locationEnabled by remember { mutableStateOf(isLocationEnabled(context)) }
 
     val locationSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
+        // L'utilisateur revient des paramètres système. On vérifie si la localisation est maintenant active.
         if (isLocationEnabled(context)) {
             locationEnabled = true
-            if (!isServiceRunning && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Si la permission est déjà accordée, on s'assure que le service est démarré.
+            // C'est sans risque d'appeler startService plusieurs fois.
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 context.startService(serviceIntent)
-                isServiceRunning = true
             }
         }
     }
@@ -123,17 +171,17 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
         onResult = { granted ->
             if (granted) {
                 locationEnabled = true
+                // Le service démarre via onStart de l'Activity et la logique de permission
                 context.startService(serviceIntent)
-                isServiceRunning = true
-            }
-            else {
+            } else {
                 locationEnabled = false
             }
         }
     )
 
-    val location by LocationService.instance?.locationUpdates?.collectAsState() ?: remember { mutableStateOf(null) }
-    var PreviousLoc by remember { mutableStateOf(location) }
+    val location by locationService?.locationUpdates?.collectAsState() ?: remember { mutableStateOf(null) }
+
+    var PreviousLoc by remember { mutableStateOf<Location?>(null) }
 
     // Ce LaunchedEffect se déclenchera chaque fois que `location` change
     LaunchedEffect(location) {
@@ -169,7 +217,6 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
                 if (isLocationEnabled(context)) {
                     locationEnabled = true
                     context.startService(serviceIntent)
-                    isServiceRunning = true
                 } else {
                     locationEnabled = false
                 }
@@ -226,9 +273,13 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
                     val intent = Intent(context, EndWalkActivity::class.java)
                     intent.putExtra("progress", progress)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+
+                    // L'activity va se détacher automatiquement via onStop(),
+                    // mais on arrête le service pour qu'il ne tourne plus en fond.
                     context.stopService(serviceIntent)
-                    isServiceRunning = false
+
                     context.startActivity(intent)
+                    (context as? Activity)?.finish() // Vous voudrez peut-être aussi fermer WalkActivity
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(R.color.red)
@@ -244,7 +295,9 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
     } else {
         // --- NOUVELLE UI quand la localisation est désactivée ---
         Column(
-            modifier = modifier.fillMaxSize().padding(16.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -274,7 +327,9 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context) {
 @Composable
 fun ProgressContentPreview() {
     CatwalkTheme {
-        ProgressContent(context = LocalContext.current)
+        ProgressContent(
+            context = LocalContext.current,
+            locationService = null)
     }
 }
 
@@ -288,18 +343,25 @@ class LocationService : LifecycleService() {
             }
         }
     }
+    inner class LocationBinder : Binder() {
+        // Retourne l'instance du service pour que les clients puissent appeler ses méthodes publiques
+        fun getService(): LocationService = this@LocationService
+    }
+
+    // 2. Créer une instance du Binder
+    private val binder = LocationBinder()
+
+    // 3. Implémenter onBind pour retourner le binder
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
+        return binder
+    }
 
     private val _locationUpdates = MutableStateFlow<Location?>(null)
     val locationUpdates: StateFlow<Location?> = _locationUpdates.asStateFlow()
 
-    // Companion object pour accéder au service plus facilement
-    companion object {
-        var instance: LocationService? = null
-    }
-
     override fun onCreate() {
         super.onCreate()
-        instance = this
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
@@ -344,6 +406,5 @@ class LocationService : LifecycleService() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-        instance = null
     }
 }
