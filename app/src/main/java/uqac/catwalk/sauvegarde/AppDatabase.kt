@@ -118,7 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
                     achievementId = null,
                     obtenu = false,
                     price = 50.0,
-                    level = 2
+                    level = 1
                 ),
                 Cat(
                     name = "Odie",
@@ -138,9 +138,9 @@ abstract class AppDatabase : RoomDatabase() {
                     cleanliness = 50,
                     affection = 0f,
                     achievementId = null,
-                    obtenu = true,
+                    obtenu = false,
                     price = 100.0,
-                    level = 3
+                    level = 2
                 ),
                 Cat(
                     name = "Luna",
@@ -162,7 +162,7 @@ abstract class AppDatabase : RoomDatabase() {
                     achievementId = null,
                     obtenu = false,
                     price = 150.0,
-                    level = 4
+                    level = 3
                 ),
                 Cat(
                     name = "Chloe",

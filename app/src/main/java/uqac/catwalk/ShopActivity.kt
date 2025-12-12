@@ -236,7 +236,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                         },
                                         enabled = canBuy,
                                         modifier = Modifier
-                                            .width(100.dp)
+                                            .width(120.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Filled.ShoppingCart,
