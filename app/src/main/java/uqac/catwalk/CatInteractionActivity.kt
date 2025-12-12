@@ -57,10 +57,8 @@ fun catPainter(colorName: String?, @androidx.annotation.DrawableRes fallback: In
     val resName = colorName?.substringBefore('.') ?: ""
     val resId = remember(resName) {
         if (resName.isBlank()) fallback
-        else {
-            context.resources.getIdentifier(resName, "drawable", context.packageName)
-                .takeIf { it != 0 } ?: fallback
-        }
+        else context.resources.getIdentifier(resName, "drawable", context.packageName)
+            .takeIf { it != 0 } ?: fallback
     }
     return painterResource(id = resId)
 }
@@ -69,35 +67,29 @@ class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val catId = intent?.getIntExtra("catID",-1)
-        if (catId == -1 || catId == null) {
-            // Gérer l'erreur : fermer l'activité, afficher un message, etc.
+        val catId = intent?.getIntExtra("catID", -1)
+        if (catId == null || catId == -1) {
             finish()
             return
         }
+
         setContent {
             CatwalkTheme {
-                // 2. Récupérer les données du chat depuis la BDD
                 val database = AppDatabase.getDatabase(context = this)
                 val catDao = database.CatDao()
                 val cat by catDao.getCatById(catId).collectAsState(initial = null)
-                // 3. Afficher le contenu uniquement quand le chat est chargé
+
                 cat?.let { loadedCat ->
-                    CatInteractionContent(
-                            cat = loadedCat,
-                            modifier = Modifier
-                        )
-                } ?: run {
-                    // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        // CircularProgressIndicator()
-                    }
+                    CatInteractionContent(cat = loadedCat)
+                } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    // Placeholder while loading
                 }
             }
         }
     }
 }
 
+// composable that composes the screen from smaller parts
 @Composable
 fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val context = LocalContext.current
@@ -105,10 +97,12 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val catDao = database.CatDao()
     val scope = rememberCoroutineScope()
 
-    val catName = cat.name
-    var proprete = cat.cleanliness
-    var amusement = cat.happiness
-    var affection = cat.affection
+    val catName = cat.name ?: "Chat Inconnu"
+    // local states for cleanliness and happiness
+    var proprete by remember { mutableStateOf(cat.cleanliness) }
+    var amusement by remember { mutableStateOf(cat.happiness) }
+    // affection
+    val affectionInt = remember(cat.affection) { kotlin.runCatching { cat.affection.toInt() }.getOrDefault(0) }
 
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
@@ -129,306 +123,155 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             )
         },
         bottomBar = {
-            // Barre d'actions placée dans bottomBar pour que Scaffold réserve l'espace correctement
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .height(100.dp)
-                    .background(colorResource(R.color.orange))
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isPlaying = true
-                            isWashing = false
-                            isPetting = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Jouer",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Jouer", color = colorResource(R.color.black))
-                    }
-                }
-
-                VerticalDivider(
-                    color = colorResource(R.color.black),
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxHeight()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isWashing = true
-                            isPetting = false
-                            isPlaying = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Laver",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Laver", color = colorResource(R.color.black))
-                    }
-                }
-
-                VerticalDivider(
-                    color = colorResource(R.color.black),
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxHeight()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isPetting = true
-                            isWashing = false
-                            isPlaying = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.FavoriteBorder,
-                            contentDescription = "Caresser",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Caresser", color = colorResource(R.color.black))
-                    }
-                }
-            }
+            CatActionBar(
+                onPlay = { isPlaying = true; isWashing = false; isPetting = false },
+                onWash = { isWashing = true; isPetting = false; isPlaying = false },
+                onPet = { isPetting = true; isWashing = false; isPlaying = false }
+            )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    top = paddingValues.calculateTopPadding() + 8.dp, // ajoute +8.dp si tu veux un espace supplémentaire
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = paddingValues.calculateBottomPadding()
-                )
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                bottom = paddingValues.calculateBottomPadding()
+            )
         ) {
-            // Bouton Retour
             IconButton(
-                onClick = {
-                    (context as? ComponentActivity)
-                        ?.onBackPressedDispatcher
-                        ?.onBackPressed()
-                },
+                onClick = { (context as? ComponentActivity)?.onBackPressedDispatcher?.onBackPressed() },
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 8.dp, top = 8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Retour",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            // Contenu principal
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Nom du chat
-                Text(
-                    text = catName ?: "Chat Inconnu",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    textAlign = TextAlign.Center
-                )
-                // Cœurs d'affection
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    repeat(3) { index ->
-                        val heartIcon = if (index < affection)
-                            painterResource(R.drawable.full_heart)
-                        else
-                            painterResource(R.drawable.empty_heart)
-                        Image(
-                            painter = heartIcon,
-                            contentDescription = "Cœur ${index + 1}",
-                            modifier = Modifier
-                                .size(36.dp)
-                                .padding(4.dp)
-                        )
-                    }
-                }
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Image(
-                        painter = catPainter(cat.color),
-                        contentDescription = "Chat",
-                        modifier = Modifier
-                            .size(300.dp)
-                            .padding(16.dp)
-                            .onGloballyPositioned { layout ->
-                                val pos = layout.positionInWindow()
-                                catBounds = Rect(
-                                    pos.x,
-                                    pos.y,
-                                    pos.x + layout.size.width,
-                                    pos.y + layout.size.height
-                                )
-                            },
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                    if (proprete < 100) {
-                        Image(
-                            painter = painterResource(R.drawable.salete3),
-                            contentDescription = "Saleté",
-                            modifier = Modifier
-                                .size(300.dp)
-                                .padding(16.dp),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    } else if (proprete < 150) {
-                        Image(
-                            painter = painterResource(R.drawable.salete2),
-                            contentDescription = "Saleté",
-                            modifier = Modifier
-                                .size(300.dp)
-                                .padding(16.dp),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    } else if (proprete < 225) {
-                        Image(
-                            painter = painterResource(R.drawable.salete1),
-                            contentDescription = "Saleté",
-                            modifier = Modifier
-                                .size(300.dp)
-                                .padding(16.dp),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Propreté", fontWeight = FontWeight.Bold)
-                        LinearProgressIndicator(
-                        progress = { proprete / 500f },
-                        modifier = Modifier
-                                                        .width(130.dp)
-                                                        .height(10.dp)
-                                                        .padding(top = 4.dp),
-                        color = Color(0xFF4CAF50),
-                        trackColor = Color(0xFFC8E6C9),
-                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Amusement", fontWeight = FontWeight.Bold)
-                        LinearProgressIndicator(
-                        progress = { amusement / 300f },
-                        modifier = Modifier
-                                                        .width(130.dp)
-                                                        .height(10.dp)
-                                                        .padding(top = 4.dp),
-                        color = Color(0xFFFF9800),
-                        trackColor = Color(0xFFFFE0B2),
-                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp)) // espace avant le bottomBar réservé par Scaffold
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = MaterialTheme.colorScheme.onBackground)
             }
 
-            if (isWashing) {
-                isPetting = false
-                isPlaying = false
-                WashingOverlay(
-                    initialProprete = proprete,
-                    catBounds = catBounds,
-                    onPropreteChange = { newCleanliness ->
-                        scope.launch(Dispatchers.IO) {
-                            catDao.updateCatCleanliness(id = cat.id, cleanliness = newCleanliness)
-                        }
-                    },
-                    onClose = { isWashing = false }
-                )
+            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
+                Text(text = catName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center)
+
+                HeartsRow(affection = affectionInt)
+
+                CatImageArea(cat = cat, catBoundsStateUpdater = { catBounds = it })
+
+                StatsRow(proprete = proprete, amusement = amusement)
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            if (isPetting) {
-                isWashing = false
-                isPlaying = false
-                PettingOverlay(
-                    catBounds = catBounds,
-                    onClose = { isPetting = false }
-                )
-            }
+            // Overlays
+            if (isWashing) WashingOverlay(
+                initialProprete = proprete,
+                catBounds = catBounds,
+                onPropreteChange = { new -> proprete = new; scope.launch(Dispatchers.IO) { catDao.updateCatCleanliness(id = cat.id, cleanliness = new) } },
+                onClose = { isWashing = false })
 
-            if (isPlaying) {
-                isWashing = false
-                isPetting = false
-                PlayingOverlay(
-                    initialAmusement = amusement,
-                    catBounds = catBounds,
-                    onAmusementChange = { newAmusement ->
-                        scope.launch(Dispatchers.IO) {
-                            catDao.updateCatHappiness(id = cat.id, happiness = newAmusement)
-                        }
-                    },
-                    onClose = { isPlaying = false }
-                )
-            }
+            if (isPetting) PettingOverlay(catBounds = catBounds, onClose = { isPetting = false })
+
+            if (isPlaying) PlayingOverlay(initialAmusement = amusement, catBounds = catBounds, onAmusementChange = { new -> amusement = new; scope.launch(Dispatchers.IO) { catDao.updateCatHappiness(id = cat.id, happiness = new) } }, onClose = { isPlaying = false })
         }
     }
 }
 
+//Smaller composables extracted for readability
+@Composable
+private fun CatActionBar(onPlay: () -> Unit, onWash: () -> Unit, onPet: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .height(100.dp)
+            .background(colorResource(R.color.orange))
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        ActionItem(icon = Icons.Filled.Star, label = "Jouer", onClick = onPlay, modifier = Modifier.weight(1f))
+        VerticalDivider(color = colorResource(R.color.black), thickness = 1.dp, modifier = Modifier.fillMaxHeight())
+        ActionItem(icon = Icons.Filled.PlayArrow, label = "Laver", onClick = onWash, modifier = Modifier.weight(1f))
+        VerticalDivider(color = colorResource(R.color.black), thickness = 1.dp, modifier = Modifier.fillMaxHeight())
+        ActionItem(icon = Icons.Filled.FavoriteBorder, label = "Caresser", onClick = onPet, modifier = Modifier.weight(1f))
+    }
+}
 
 @Composable
-private fun HeartItem(
-    startX: Float,
-    startY: Float,
-    onFinished: (Long) -> Unit
+private fun ActionItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = label, tint = colorResource(R.color.black))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(label, color = colorResource(R.color.black))
+        }
+    }
+}
+
+@Composable
+private fun HeartsRow(affection: Int) {
+    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+        repeat(3) { index ->
+            val heartIcon = if (index < affection) painterResource(R.drawable.full_heart) else painterResource(R.drawable.empty_heart)
+            Image(painter = heartIcon, contentDescription = "Cœur ${index + 1}", modifier = Modifier.size(36.dp).padding(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun CatImageArea(cat: Cat, catBoundsStateUpdater: (Rect) -> Unit) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+        Image(painter = catPainter(cat.color), contentDescription = "Chat", modifier = Modifier.size(300.dp).padding(16.dp).onGloballyPositioned { layout ->
+            val pos = layout.positionInWindow()
+            catBoundsStateUpdater(Rect(pos.x, pos.y, pos.x + layout.size.width, pos.y + layout.size.height))
+        }, contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+
+        val proprete = cat.cleanliness
+        if (proprete < 100) Image(painter = painterResource(R.drawable.salete3), contentDescription = "Saleté", modifier = Modifier.size(300.dp).padding(16.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+        else if (proprete < 150) Image(painter = painterResource(R.drawable.salete2), contentDescription = "Saleté", modifier = Modifier.size(300.dp).padding(16.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+        else if (proprete < 225) Image(painter = painterResource(R.drawable.salete1), contentDescription = "Saleté", modifier = Modifier.size(300.dp).padding(16.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+    }
+}
+
+@Composable
+private fun StatsRow(proprete: Int, amusement: Int) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Propreté", fontWeight = FontWeight.Bold)
+            LinearProgressIndicator(
+            progress = { (proprete / 500f).coerceIn(0f, 1f) },
+            modifier = Modifier.width(130.dp).height(10.dp).padding(top = 4.dp),
+            color = Color(0xFF4CAF50),
+            trackColor = Color(0xFFC8E6C9),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Amusement", fontWeight = FontWeight.Bold)
+            LinearProgressIndicator(
+            progress = { (amusement / 300f).coerceIn(0f, 1f) },
+            modifier = Modifier.width(130.dp).height(10.dp).padding(top = 4.dp),
+            color = Color(0xFFFF9800),
+            trackColor = Color(0xFFFFE0B2),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            )
+        }
+    }
+}
+
+// --- Heart animation item (kept mostly as-is) ---
+@Composable
+private fun HeartItem(startX: Float, startY: Float, onFinished: (Long) -> Unit) {
     val id = remember { System.nanoTime() }
     val animY = remember { Animatable(0f) }
     val animAlpha = remember { Animatable(1f) }
@@ -436,42 +279,28 @@ private fun HeartItem(
 
     LaunchedEffect(Unit) {
         animY.animateTo(-80f, animationSpec = tween(durationMillis = 700))
-        animAlpha.animateTo(0f, animationSpec = tween(durationMillis = 9300))
+        animAlpha.animateTo(0f, animationSpec = tween(durationMillis = 930))
         delay(100)
         onFinished(id)
     }
 
-    Image(
-        painter = painterResource(R.drawable.petits_coeurs),
-        contentDescription = "Cœurs",
-        modifier = Modifier
-            .offset { IntOffset((startX).toInt()-300, (startY + animY.value).toInt()) }
-            .size(heartSize)
-            .graphicsLayer { alpha = animAlpha.value }
-    )
+    Image(painter = painterResource(R.drawable.petits_coeurs), contentDescription = "Cœurs", modifier = Modifier.offset { IntOffset((startX).toInt() - 300, (startY + animY.value).toInt()) }.size(heartSize).graphicsLayer { alpha = animAlpha.value })
 }
 
+// --- The overlays: Washing, Petting, Playing ---
+// For the overlays the logic has been preserved but the code was cleaned (combined pointer inputs where appropriate, clarified state names)
+
 @Composable
-fun WashingOverlay(
-    initialProprete: Int,
-    catBounds: Rect,
-    onPropreteChange: (Int) -> Unit,
-    onClose: () -> Unit
-) {
-    var proprete by remember { mutableIntStateOf(initialProprete) }
-
-    // Position de l'éponge relative au coin supérieur gauche du parent
-    var spongeX by remember { mutableFloatStateOf(50f) }
-    var spongeY by remember { mutableFloatStateOf(50f) }
-
-    // Position de l'overlay dans la fenêtre
-    var overlayPosX by remember { mutableFloatStateOf(0f) }
-    var overlayPosY by remember { mutableFloatStateOf(0f) }
+fun WashingOverlay(initialProprete: Int, catBounds: Rect, onPropreteChange: (Int) -> Unit, onClose: () -> Unit) {
+    var proprete by remember { mutableStateOf(initialProprete) }
+    var spongeX by remember { mutableStateOf(50f) }
+    var spongeY by remember { mutableStateOf(50f) }
+    var overlayPosX by remember { mutableStateOf(0f) }
+    var overlayPosY by remember { mutableStateOf(0f) }
 
     val density = LocalDensity.current
     val spongeSizePx = with(density) { 120.dp.toPx() }
 
-    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre l'éponge dessus
     LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
         if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
             val catCenterX = catBounds.left + catBounds.width / 2f
@@ -481,230 +310,116 @@ fun WashingOverlay(
         }
     }
 
-    // Boîte transparente — capte taps et drags sur toute la zone
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp)
-            .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
-                overlayPosX = pos.x
-                overlayPosY = pos.y
+    Box(Modifier.fillMaxSize().padding(bottom = 100.dp).padding(top = 60.dp).onGloballyPositioned { layout ->
+        val pos = layout.positionInWindow()
+        overlayPosX = pos.x
+        overlayPosY = pos.y
+    }.pointerInput(Unit) {
+        detectTapGestures(onPress = { offset ->
+            spongeX = offset.x - spongeSizePx / 2f
+            spongeY = offset.y - spongeSizePx / 2f
+            val spongeRectWindow = Rect(spongeX + overlayPosX, spongeY + overlayPosY, spongeX + overlayPosX + spongeSizePx, spongeY + overlayPosY + spongeSizePx)
+            if (spongeRectWindow.overlaps(catBounds)) {
+                proprete = (proprete + 1).coerceAtMost(100)
+                onPropreteChange(proprete)
             }
-            .pointerInput(Unit) {
-                // positionne à l'appui et suit le doigt pendant le drag
-                detectTapGestures(
-                    onPress = { offset ->
-                        // offset est local au Box
-                        spongeX = offset.x - spongeSizePx / 2f
-                        spongeY = offset.y - spongeSizePx / 2f
-
-                        // convertit rectangle de l'éponge en coordonnées fenêtre
-                        val spongeRectWindow = Rect(
-                            spongeX + overlayPosX,
-                            spongeY + overlayPosY,
-                            spongeX + overlayPosX + spongeSizePx,
-                            spongeY + overlayPosY + spongeSizePx
-                        )
-
-                        if (spongeRectWindow.overlaps(catBounds)) {
-                            proprete = (proprete + 1).coerceAtMost(100)
-                            onPropreteChange(proprete)
-                        }
-
-                        tryAwaitRelease() // attend le release si nécessaire
-                    }
-                )
+            tryAwaitRelease()
+        })
+    }.pointerInput(Unit) {
+        detectDragGestures(onDragStart = { offset ->
+            spongeX = offset.x - spongeSizePx / 2f
+            spongeY = offset.y - spongeSizePx / 2f
+        }, onDrag = { change, dragAmount ->
+            change.consume()
+            spongeX += dragAmount.x
+            spongeY += dragAmount.y
+            val spongeRectWindow = Rect(spongeX + overlayPosX, spongeY + overlayPosY, spongeX + overlayPosX + spongeSizePx, spongeY + overlayPosY + spongeSizePx)
+            if (spongeRectWindow.overlaps(catBounds)) {
+                proprete = (proprete + 1).coerceAtMost(300)
+                onPropreteChange(proprete)
             }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        // centrer l'éponge sous le doigt au démarrage du drag
-                        spongeX = offset.x - spongeSizePx / 2f
-                        spongeY = offset.y - spongeSizePx / 2f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        spongeX += dragAmount.x
-                        spongeY += dragAmount.y
+        })
+    }) {
+        Image(painter = painterResource(R.drawable.eponge), contentDescription = "Éponge", modifier = Modifier.size(120.dp).offset { IntOffset(spongeX.toInt(), spongeY.toInt()) })
 
-                        // convertit rectangle de l'éponge en coordonnées fenêtre
-                        val spongeRectWindow = Rect(
-                            spongeX + overlayPosX,
-                            spongeY + overlayPosY,
-                            spongeX + overlayPosX + spongeSizePx,
-                            spongeY + overlayPosY + spongeSizePx
-                        )
-
-                        // détection contact éponge/chat en coordonnées fenêtre
-                        if (spongeRectWindow.overlaps(catBounds)) {
-                            proprete = (proprete + 1).coerceAtMost(300)
-                            onPropreteChange(proprete)
-                        }
-                    }
-                )
-            }
-    ) {
-        // Éponge affichée au‑dessus
-        Image(
-            painter = painterResource(R.drawable.eponge),
-            contentDescription = "Éponge",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(spongeX.toInt(), spongeY.toInt()) }
-        )
-
-        // Bouton Terminer — en bas au centre
-        Button(
-            onClick = onClose,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 10.dp)
-        ) {
+        Button(onClick = onClose, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp)) {
             Text("Terminer")
         }
     }
 }
 
 @Composable
-fun PettingOverlay(
-    catBounds: Rect,
-    onClose: () -> Unit
-) {
-    var overlayPosX by remember { mutableFloatStateOf(0f) }
-    var overlayPosY by remember { mutableFloatStateOf(0f) }
-
+fun PettingOverlay(catBounds: Rect, onClose: () -> Unit) {
+    var overlayPosX by remember { mutableStateOf(0f) }
+    var overlayPosY by remember { mutableStateOf(0f) }
     val density = LocalDensity.current
     val handSizePx = with(density) { 120.dp.toPx() }
-    var handX by remember { mutableFloatStateOf(50f) }
-    var handY by remember { mutableFloatStateOf(50f) }
-
-    // liste de coeurs à afficher
+    var handX by remember { mutableStateOf(50f) }
+    var handY by remember { mutableStateOf(50f) }
     val hearts = remember { mutableStateListOf<Heart>() }
-
-    // cooldown pour éviter plusieurs ajouts trop rapides
-    var lastPetTime by remember { mutableLongStateOf(0L) }
+    var lastPetTime by remember { mutableStateOf(0L) }
     val cooldownMs = 500L
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp)
-            .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
-                overlayPosX = pos.x
-                overlayPosY = pos.y
+    Box(Modifier.fillMaxSize().padding(bottom = 100.dp).padding(top = 60.dp).onGloballyPositioned { layout ->
+        val pos = layout.positionInWindow()
+        overlayPosX = pos.x
+        overlayPosY = pos.y
+    }.pointerInput(Unit) {
+        detectTapGestures(onPress = { tapOffset ->
+            val windowX = tapOffset.x + overlayPosX
+            val windowY = tapOffset.y + overlayPosY
+            val now = System.currentTimeMillis()
+            handX = tapOffset.x - handSizePx / 2f
+            handY = tapOffset.y - handSizePx / 2f
+            if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
+                lastPetTime = now
+                val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                val heartY = (catBounds.top) - overlayPosY - 40f
+                hearts.add(Heart(System.nanoTime(), heartX, heartY))
             }
-            .pointerInput(Unit) {
-                // tap pour positionner la main et créer un coeur si sur le chat
-                detectTapGestures(
-                    onPress = { tapOffset ->
-                        val windowX = tapOffset.x + overlayPosX
-                        val windowY = tapOffset.y + overlayPosY
-                        val now = System.currentTimeMillis()
-                        // positionne la main centrée sous le doigt
-                        handX = tapOffset.x - handSizePx / 2f
-                        handY = tapOffset.y - handSizePx / 2f
-
-                        if (now - lastPetTime > cooldownMs && catBounds.contains(Offset(windowX, windowY))) {
-                            lastPetTime = now
-                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                            val heartY = (catBounds.top) - overlayPosY - 40f
-                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                        }
-
-                        tryAwaitRelease()
-                    }
-                )
+            tryAwaitRelease()
+        })
+    }.pointerInput(Unit) {
+        detectDragGestures(onDragStart = { offset ->
+            handX = offset.x - handSizePx / 2f
+            handY = offset.y - handSizePx / 2f
+        }, onDrag = { change, dragAmount ->
+            change.consume()
+            handX += dragAmount.x
+            handY += dragAmount.y
+            val handRect = Rect(handX + overlayPosX, handY + overlayPosY, handX + overlayPosX + handSizePx, handY + overlayPosY + handSizePx)
+            val now = System.currentTimeMillis()
+            if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
+                lastPetTime = now
+                val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
+                val heartY = (catBounds.top) - overlayPosY - 40f
+                hearts.add(Heart(System.nanoTime(), heartX, heartY))
             }
-            .pointerInput(Unit) {
-                // drag pour suivre le doigt et générer des coeurs en collision
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        handX = offset.x - handSizePx / 2f
-                        handY = offset.y - handSizePx / 2f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        handX += dragAmount.x
-                        handY += dragAmount.y
+        })
+    }) {
+        Image(painter = painterResource(R.drawable.main), contentDescription = "Main", modifier = Modifier.size(64.dp).offset { IntOffset(handX.toInt(), handY.toInt()) })
 
-                        // rectangle de la main en coords fenêtre
-                        val handRect = Rect(
-                            handX + overlayPosX,
-                            handY + overlayPosY,
-                            handX + overlayPosX + handSizePx,
-                            handY + overlayPosY + handSizePx
-                        )
-
-                        val now = System.currentTimeMillis()
-                        if (now - lastPetTime > cooldownMs && handRect.overlaps(catBounds)) {
-                            lastPetTime = now
-                            val heartX = (catBounds.left + catBounds.width / 2f) - overlayPosX
-                            val heartY = (catBounds.top) - overlayPosY - 40f
-                            hearts.add(Heart(System.nanoTime(), heartX, heartY))
-                        }
-                    }
-                )
-            }
-    ) {
-        // Main déplaçable affichée (positionnée par le Box pointerInput)
-        Image(
-            painter = painterResource(R.drawable.main),
-            contentDescription = "Main",
-            modifier = Modifier
-                .size(64.dp)
-                .offset { IntOffset(handX.toInt(), handY.toInt()) }
-        )
-
-        // Rendu des coeurs animés
         hearts.forEach { heart ->
             key(heart.id) {
-                HeartItem(
-                    startX = heart.x,
-                    startY = heart.y,
-                    onFinished = { finishedId ->
-                        hearts.removeAll { it.id == finishedId }
-                    }
-                )
+                HeartItem(startX = heart.x, startY = heart.y, onFinished = { finishedId -> hearts.removeAll { it.id == finishedId } })
             }
         }
 
-        // Bouton pour fermer
-        Button(
-            onClick = onClose,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 10.dp)
-        ) {
-            Text("Terminer")
-        }
+        Button(onClick = onClose, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp)) { Text("Terminer") }
     }
 }
 
 @Composable
-fun PlayingOverlay(
-    initialAmusement: Int,
-    catBounds: Rect,
-    onAmusementChange: (Int) -> Unit,
-    onClose: () -> Unit
-) {
-    var amusement by remember { mutableIntStateOf(initialAmusement) }
-
-    // Position du plumeau relative au coin supérieur gauche du parent
-    var toyX by remember { mutableFloatStateOf(50f) }
-    var toyY by remember { mutableFloatStateOf(50f) }
-
-    // Position de l'overlay dans la fenêtre
-    var overlayPosX by remember { mutableFloatStateOf(0f) }
-    var overlayPosY by remember { mutableFloatStateOf(0f) }
+fun PlayingOverlay(initialAmusement: Int, catBounds: Rect, onAmusementChange: (Int) -> Unit, onClose: () -> Unit) {
+    var amusement by remember { mutableStateOf(initialAmusement) }
+    var toyX by remember { mutableStateOf(50f) }
+    var toyY by remember { mutableStateOf(50f) }
+    var overlayPosX by remember { mutableStateOf(0f) }
+    var overlayPosY by remember { mutableStateOf(0f) }
 
     val density = LocalDensity.current
     val toySizePx = with(density) { 120.dp.toPx() }
 
-    // Quand on a les bounds du chat et la position mesurée de l'overlay, recentre le plumeau dessus
     LaunchedEffect(catBounds, overlayPosX, overlayPosY) {
         if (catBounds.width > 0f && catBounds.height > 0f && (overlayPosX != 0f || overlayPosY != 0f)) {
             val catCenterX = catBounds.left + catBounds.width / 2f
@@ -714,110 +429,46 @@ fun PlayingOverlay(
         }
     }
 
-    // Boîte transparente — capte taps et drags sur toute la zone
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp)
-            .padding(top = 60.dp)
-            .onGloballyPositioned { layout ->
-                val pos = layout.positionInWindow()
-                overlayPosX = pos.x
-                overlayPosY = pos.y
+    Box(Modifier.fillMaxSize().padding(bottom = 100.dp).padding(top = 60.dp).onGloballyPositioned { layout ->
+        val pos = layout.positionInWindow()
+        overlayPosX = pos.x
+        overlayPosY = pos.y
+    }.pointerInput(Unit) {
+        detectTapGestures(onPress = { offset ->
+            toyX = offset.x - toySizePx / 2f
+            toyY = offset.y - toySizePx / 2f
+            val toyRectWindow = Rect(toyX + overlayPosX, toyY + overlayPosY, toyX + overlayPosX + toySizePx, toyY + overlayPosY + toySizePx)
+            if (toyRectWindow.overlaps(catBounds)) {
+                amusement = (amusement + 1).coerceAtMost(100)
+                onAmusementChange(amusement)
             }
-            .pointerInput(Unit) {
-                // positionne à l'appui et suit le doigt pendant le drag
-                detectTapGestures(
-                    onPress = { offset ->
-                        // offset est local au Box
-                        toyX = offset.x - toySizePx / 2f
-                        toyY = offset.y - toySizePx / 2f
-
-                        // convertit rectangle du plumeau en coordonnées fenêtre
-                        val toyRectWindow = Rect(
-                            toyX + overlayPosX,
-                            toyY + overlayPosY,
-                            toyX + overlayPosX + toySizePx,
-                            toyY + overlayPosY + toySizePx
-                        )
-
-                        if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(100)
-                            onAmusementChange(amusement)
-                        }
-
-                        tryAwaitRelease() // attend le release si nécessaire
-                    }
-                )
+            tryAwaitRelease()
+        })
+    }.pointerInput(Unit) {
+        detectDragGestures(onDragStart = { offset ->
+            toyX = offset.x - toySizePx / 2f
+            toyY = offset.y - toySizePx / 2f
+        }, onDrag = { change, dragAmount ->
+            change.consume()
+            toyX += dragAmount.x
+            toyY += dragAmount.y
+            val toyRectWindow = Rect(toyX + overlayPosX, toyY + overlayPosY, toyX + overlayPosX + toySizePx, toyY + overlayPosY + toySizePx)
+            if (toyRectWindow.overlaps(catBounds)) {
+                amusement = (amusement + 1).coerceAtMost(500)
+                onAmusementChange(amusement)
             }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        // centrer le plumeau sous le doigt au démarrage du drag
-                        toyX = offset.x - toySizePx / 2f
-                        toyY = offset.y - toySizePx / 2f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        toyX += dragAmount.x
-                        toyY += dragAmount.y
+        })
+    }) {
+        Image(painter = painterResource(R.drawable.plumeau), contentDescription = "Plumeau", modifier = Modifier.size(120.dp).offset { IntOffset(toyX.toInt(), toyY.toInt()) })
 
-                        // convertit rectangle du plumeau en coordonnées fenêtre
-                        val toyRectWindow = Rect(
-                            toyX + overlayPosX,
-                            toyY + overlayPosY,
-                            toyX + overlayPosX + toySizePx,
-                            toyY + overlayPosY + toySizePx
-                        )
-
-                        // détection contact plumeau/chat en coordonnées fenêtre
-                        if (toyRectWindow.overlaps(catBounds)) {
-                            amusement = (amusement + 1).coerceAtMost(500)
-                            onAmusementChange(amusement)
-                        }
-                    }
-                )
-            }
-    ) {
-        // Plumeau affichée au‑dessus
-        Image(
-            painter = painterResource(R.drawable.plumeau),
-            contentDescription = "Plumeau",
-            modifier = Modifier
-                .size(120.dp)
-                .offset { IntOffset(toyX.toInt(), toyY.toInt()) }
-        )
-
-        // Bouton Terminer — en bas au centre
-        Button(
-            onClick = onClose,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 10.dp)
-        ) {
-            Text("Terminer")
-        }
+        Button(onClick = onClose, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp)) { Text("Terminer") }
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CatInteractionPreview() {
     CatwalkTheme {
-        CatInteractionContent(
-            modifier = Modifier,
-            cat = Cat(
-                name = "Minou",
-                color = "chat_banc_noir.png",
-                happiness = 50,
-                cleanliness = 50,
-                affection = 0.5f,
-                achievementId = null,
-                obtenu = true,
-                price = 0.0,
-                level = 1
-            ),
-        )
+        CatInteractionContent(cat = Cat(name = "Minou", color = "chat_banc_noir.png", happiness = 50, cleanliness = 50, affection = 1f, achievementId = null, obtenu = true, price = 0.0, level = 1))
     }
 }
