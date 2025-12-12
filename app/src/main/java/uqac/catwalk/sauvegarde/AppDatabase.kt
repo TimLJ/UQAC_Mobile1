@@ -141,6 +141,39 @@ abstract class AppDatabase : RoomDatabase() {
                     obtenu = true,
                     price = 100.0,
                     level = 3
+                ),
+                Cat(
+                    name = "Luna",
+                    color = "chat_blanc_noir",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 120.0,
+                    level = 3
+                ),
+                Cat(
+                    name = "Simba",
+                    color = "chat_roux",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 150.0,
+                    level = 4
+                ),
+                Cat(
+                    name = "Chloe",
+                    color = "chat_blanc_noir",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 200.0,
+                    level = 4
                 )
             )
             listCats.forEach { catDao.insert(it) }
