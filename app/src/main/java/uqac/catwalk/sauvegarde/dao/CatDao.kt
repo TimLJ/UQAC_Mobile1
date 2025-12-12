@@ -25,6 +25,12 @@ interface CatDao {
     @Query("SELECT * FROM cats WHERE obtenu = 1")
     fun getDebloques(): Flow<List<Cat>>
 
+    @Query("SELECT * FROM cats")
+    fun getAll(): Flow<List<Cat>>
+
+    @Query ("SELECT * FROM cats WHERE obtenu = 0")
+    fun getCatsNotObtained(): Flow<List<Cat>>
+
     @Query("UPDATE cats SET name = :name WHERE id = :id")
     suspend fun updateCatName(id: Int, name: String)
 
@@ -54,4 +60,6 @@ interface CatDao {
 
     @Query("UPDATE cats SET obtenu = :obtenu WHERE id = :id")
     suspend fun updateCatObtenu(id: Int, obtenu: Boolean)
+    @Query("SELECT * FROM cats WHERE name = :name")
+    suspend fun getByName(name: String): Cat
 }

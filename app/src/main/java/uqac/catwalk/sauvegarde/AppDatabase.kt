@@ -84,56 +84,99 @@ abstract class AppDatabase : RoomDatabase() {
             )
             items.forEach { itemDao.insert(it) }
 
-            // ajouter des chats de départ
+            // liste chat
             val catDao = database.CatDao()
-            val starterCats = listOf(
+            val listCats = listOf(
                 Cat(
                     name = "Minou",
                     color = "chat_blanc_noir",
                     happiness = 50,
                     cleanliness = 50,
-                    affection = 0.5f,
+                    affection = 0f,
                     achievementId = null,
-                    obtenu = true
+                    obtenu = true,
+                    price = 0.0,
+                    level = 1
                 ),
                 Cat(
                     name = "Bouboule",
                     color = "chat_gris",
-                    happiness = 70,
-                    cleanliness = 30,
-                    affection = 1.2f,
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
                     achievementId = null,
-                    obtenu = true
+                    obtenu = true,
+                    price = 0.0,
+                    level = 1
                 ),
                 Cat(
                     name = "Whiskers",
                     color = "chat_roux",
                     happiness = 50,
                     cleanliness = 50,
-                    affection = 0.5f,
+                    affection = 0f,
                     achievementId = null,
-                    obtenu = false
+                    obtenu = false,
+                    price = 50.0,
+                    level = 1
                 ),
                 Cat(
                     name = "Odie",
                     color = "chat_gris",
                     happiness = 50,
                     cleanliness = 50,
-                    affection = 0.5f,
+                    affection = 0f,
                     achievementId = null,
-                    obtenu = false
+                    obtenu = false,
+                    price = 70.0,
+                    level = 2
                 ),
                 Cat(
                     name = "Félix",
                     color = "chat_roux",
                     happiness = 50,
                     cleanliness = 50,
-                    affection = 0.5f,
+                    affection = 0f,
                     achievementId = null,
-                    obtenu = true
+                    obtenu = false,
+                    price = 100.0,
+                    level = 2
+                ),
+                Cat(
+                    name = "Luna",
+                    color = "chat_blanc_noir",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 120.0,
+                    level = 3
+                ),
+                Cat(
+                    name = "Simba",
+                    color = "chat_roux",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 150.0,
+                    level = 3
+                ),
+                Cat(
+                    name = "Chloe",
+                    color = "chat_blanc_noir",
+                    happiness = 50,
+                    cleanliness = 50,
+                    affection = 0f,
+                    achievementId = null,
+                    obtenu = false,
+                    price = 200.0,
+                    level = 4
                 )
             )
-            starterCats.forEach { catDao.insert(it) }
+            listCats.forEach { catDao.insert(it) }
         }
     }
 }

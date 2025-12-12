@@ -29,6 +29,8 @@ data class Cat(
     var affection: Float,
     var achievementId: Int?, // Nullable in case the cat has no achievement
     val obtenu: Boolean,
+    val price: Double,
+    var level: Int,
     @ColumnInfo(name = "last_decay_at")
     val lastDecayAt: Long = System.currentTimeMillis(), // derniere fois ou les stats ont decaye
     @ColumnInfo(name = "lastSeenAt")

@@ -98,7 +98,7 @@ fun CatContent(modifier: Modifier = Modifier) {
                         .padding(start = 16.dp, end = 16.dp)
                 ) {
                     Text(
-                        text = "Nos Chats 🐱",
+                        text = "Mes Chats 🐱",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier

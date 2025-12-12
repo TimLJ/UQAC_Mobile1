@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -58,10 +59,8 @@ fun catPainter(colorName: String?, @androidx.annotation.DrawableRes fallback: In
     val resName = colorName?.substringBefore('.') ?: ""
     val resId = remember(resName) {
         if (resName.isBlank()) fallback
-        else {
-            context.resources.getIdentifier(resName, "drawable", context.packageName)
-                .takeIf { it != 0 } ?: fallback
-        }
+        else context.resources.getIdentifier(resName, "drawable", context.packageName)
+            .takeIf { it != 0 } ?: fallback
     }
     return painterResource(id = resId)
 }
@@ -70,12 +69,12 @@ class CatInteractionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val catId = intent?.getIntExtra("catID",-1)
-        if (catId == -1 || catId == null) {
-            // Gérer l'erreur : fermer l'activité, afficher un message, etc.
+        val catId = intent?.getIntExtra("catID", -1)
+        if (catId == null || catId == -1) {
             finish()
             return
         }
+
         setContent {
             // Récupérer les données du chat depuis la BDD
             val database = AppDatabase.getDatabase(context = this)
@@ -117,11 +116,16 @@ class CatInteractionActivity : ComponentActivity() {
 
             CatwalkTheme {
                 // Afficher le contenu uniquement quand le chat est chargé
+            CatwalkTheme {
+                val database = AppDatabase.getDatabase(context = this)
+                val catDao = database.CatDao()
+                val cat by catDao.getCatById(catId).collectAsState(initial = null)
+
                 cat?.let { loadedCat ->
                     CatInteractionContent(
-                            cat = loadedCat,
-                            modifier = Modifier
-                        )
+                        cat = loadedCat,
+                        modifier = Modifier
+                    )
                 } ?: run {
                     // Optionnel : Afficher un indicateur de chargement pendant que 'cat' est null
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -133,6 +137,7 @@ class CatInteractionActivity : ComponentActivity() {
     }
 }
 
+// composable that composes the screen from smaller parts
 @Composable
 fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val context = LocalContext.current
@@ -140,9 +145,10 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val catDao = database.CatDao()
     val scope = rememberCoroutineScope()
 
-    val catName = cat.name
-    var proprete = cat.cleanliness
-    var amusement = cat.happiness
+    val catName = cat.name ?: "Chat Inconnu"
+    // local states for cleanliness and happiness
+    var proprete by remember { mutableStateOf(cat.cleanliness) }
+    var amusement by remember { mutableStateOf(cat.happiness) }
     var affection = cat.affection
 
     var isWashing by remember { mutableStateOf(false) }
@@ -767,6 +773,7 @@ fun PlayingOverlay(
     )
 }
 
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CatInteractionPreview() {
@@ -780,7 +787,9 @@ fun CatInteractionPreview() {
                 cleanliness = 50,
                 affection = 0.5f,
                 achievementId = null,
-                obtenu = true
+                obtenu = true,
+                price = 0.0,
+                level = 1
             ),
         )
     }
