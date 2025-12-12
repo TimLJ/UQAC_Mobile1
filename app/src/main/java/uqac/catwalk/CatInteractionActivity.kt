@@ -1,3 +1,4 @@
+// kotlin
 package uqac.catwalk
 
 import android.annotation.SuppressLint
@@ -96,15 +97,15 @@ class CatInteractionActivity : ComponentActivity() {
 
                     // calculer affection liée à la fréquence de visite
                     val visitInc = when {
-                        now - loaded.lastSeenAt > 7 * DAY_MS -> 0.3f
-                        now - loaded.lastSeenAt > DAY_MS -> 0.1f
+                        now - loaded.lastSeenAt > 7 * DAY_MS -> 0.03f
+                        now - loaded.lastSeenAt > DAY_MS -> 0.01f
                         else -> 0f
                     }
 
                     // pénalité si propreté / amusement trop bas
                     val penalty = (if (newCleanliness < 50) 0.2f else 0f) + (if (newHappiness < 50) 0.2f else 0f)
 
-                    val newAffection = (loaded.affection + visitInc - penalty).coerceIn(0f, 3f)
+                    val newAffection = (loaded.affection + visitInc - penalty).coerceIn(0f, 1f)
 
                     scope.launch(Dispatchers.IO) {
                         catDao.updateCatCleanlinessAndLastDecay(loaded.id, newCleanliness, now)
@@ -113,9 +114,7 @@ class CatInteractionActivity : ComponentActivity() {
                     }
                 }
             }
-
-            CatwalkTheme {
-                // Afficher le contenu uniquement quand le chat est chargé
+            // Afficher le contenu uniquement quand le chat est chargé
             CatwalkTheme {
                 val database = AppDatabase.getDatabase(context = this)
                 val catDao = database.CatDao()
@@ -149,7 +148,12 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     // local states for cleanliness and happiness
     var proprete by remember { mutableStateOf(cat.cleanliness) }
     var amusement by remember { mutableStateOf(cat.happiness) }
-    var affection = cat.affection
+    var affection by remember { mutableStateOf(cat.affection) }
+
+    // Synchroniser les états locaux quand la BDD renvoie une nouvelle valeur
+    LaunchedEffect(cat.cleanliness) { proprete = cat.cleanliness }
+    LaunchedEffect(cat.happiness) { amusement = cat.happiness }
+    LaunchedEffect(cat.affection) { affection = cat.affection }
 
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
@@ -304,7 +308,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             ) {
                 // Nom du chat
                 Text(
-                    text = catName ?: "Chat Inconnu",
+                    text = catName,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -396,9 +400,9 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         LinearProgressIndicator(
                         progress = { proprete / 300f },
                         modifier = Modifier
-                            .width(130.dp)
-                            .height(10.dp)
-                            .padding(top = 4.dp),
+                                                        .width(130.dp)
+                                                        .height(10.dp)
+                                                        .padding(top = 4.dp),
                         color = Color(0xFF4CAF50),
                         trackColor = Color(0xFFC8E6C9),
                         strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
@@ -428,16 +432,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     initialProprete = proprete,
                     catBounds = catBounds,
                     onPropreteChange = { newCleanliness ->
+                        proprete = newCleanliness
                         scope.launch(Dispatchers.IO) {
                             catDao.updateCatCleanlinessAndLastDecay(id = cat.id, cleanliness = newCleanliness, lastDecayAt = System.currentTimeMillis())
-
                         }
                     },
                     onAffectionIncrease = { delta ->
+                        affection = (affection + delta).coerceIn(0f, 0.2f)
                         scope.launch(Dispatchers.IO) {
                             val now = System.currentTimeMillis()
-                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
-                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
                         }
                     },
                     onClose = { isWashing = false }
@@ -451,10 +455,10 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 PettingOverlay(
                     catBounds = catBounds,
                     onAffectionIncrease = { delta ->
+                        affection = (affection + delta).coerceIn(0f, 0.5f)
                         scope.launch(Dispatchers.IO) {
                             val now = System.currentTimeMillis()
-                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
-                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
                         }
                     },
                     onClose = { isPetting = false }
@@ -468,15 +472,16 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     initialAmusement = amusement,
                     catBounds = catBounds,
                     onAmusementChange = { newAmusement ->
+                        amusement = newAmusement
                         scope.launch(Dispatchers.IO) {
                             catDao.updateCatHappinessAndLastDecay(id = cat.id, happiness = newAmusement, lastDecayAt = System.currentTimeMillis())
                         }
                     },
                     onAffectionIncrease = { delta ->
+                        affection = (affection + delta).coerceIn(0f, 0.3f)
                         scope.launch(Dispatchers.IO) {
                             val now = System.currentTimeMillis()
-                            val newAff = (cat.affection + delta).coerceIn(0f, 3f)
-                            catDao.updateCatAffectionAndLastSeen(cat.id, newAff, now)
+                            catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
                         }
                     },
                     onClose = { isPlaying = false }
@@ -739,7 +744,7 @@ fun PettingOverlay(
                 y = (catBounds.top - 40f)
             )
             addEffect(heart)
-            onAffectionIncrease(0.08f)
+            onAffectionIncrease(0.05f)
         },
         onClose = onClose
     )
@@ -767,7 +772,7 @@ fun PlayingOverlay(
         onHit = { _, _ ->
             amusement = (amusement + 1).coerceAtMost(300)
             onAmusementChange(amusement)
-            onAffectionIncrease(0.04f)
+            onAffectionIncrease(0.03f)
         },
         onClose = onClose
     )
