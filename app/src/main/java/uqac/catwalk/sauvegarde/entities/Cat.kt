@@ -24,4 +24,6 @@ data class Cat(
     var affection: Float,
     var achievementId: Int?, // Nullable in case the cat has no achievement
     val obtenu: Boolean,
+    val price: Double,
+    var level: Int
 ) : Parcelable

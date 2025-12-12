@@ -1,6 +1,7 @@
 package uqac.catwalk
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -33,11 +35,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
@@ -46,8 +51,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.DataStoreManager
+import uqac.catwalk.sauvegarde.PlayerData
+import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.theme.CatwalkTheme
+
+data class ShopCat(val name: String, val color: String, val price: Double, val level: Int)
 
 class ShopActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,16 +82,34 @@ class ShopActivity : ComponentActivity() {
 fun ShopContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context = context)
-    val itemDao = database.ItemDao()
-    val items by itemDao.getAllItems().collectAsState(initial = emptyList())
-    // Liste des articles de magasin (15 pour l'exemple)
-//    val shopItems = listOf(
-//        "Croquettes Premium", "Jouet Souris", "Griffoir Deluxe",
-//        "Panier Confort", "Collier Élégant", "Brosse Poils Longs",
-//        "Fontaine à Eau", "Arbre à Chat", "Coussin Chauffant",
-//        "Jouet Plume", "Litière Bio", "Distributeur Croquettes",
-//        "Tunnel de Jeu", "Herbe à Chat", "Sac de Transport"
-//    )
+    val catDao = database.CatDao()
+    val dataStoreManager = DataStoreManager(context)
+
+    // Etats pour les informations utilisateur
+    var playerData by remember { mutableStateOf<PlayerData?>(null) }
+    var levelUser by remember { mutableStateOf(1) }
+    var moneyUser by remember { mutableStateOf(100) }
+
+    // Charge les données utilisateur au démarrage
+    LaunchedEffect(Unit) {
+        val pd = dataStoreManager.loadPlayerData()
+        playerData = pd
+        levelUser = pd.Lv
+        moneyUser = pd.money
+    }
+
+    // Récupère la liste de chats depuis la base (Flow<List<Cat>> attendu)
+    val catsFromDb by catDao.getCatsNotObtained().collectAsState(initial = emptyList())
+
+    // Mappe les chats de la BDD en ShopCat (prix par défaut ici)
+    val shopCats = catsFromDb.map { dbCat ->
+        ShopCat(
+            name = dbCat.name,
+            color = dbCat.color,
+            price = dbCat.price,
+            level = dbCat.level
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -109,7 +140,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                         .padding(start = 16.dp, end = 16.dp)
                 ) {
                     Text(
-                        text = "Boutique pour Chats ",
+                        text = "Boutique de Chats ",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -124,7 +155,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(items) { item ->
+                        items(shopCats) { shopCat ->
                             Card(
                                 modifier = Modifier
                                     .padding(bottom = 10.dp)
@@ -143,30 +174,81 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = item.name,
+                                        text = shopCat.name,
                                         textAlign = TextAlign.Start,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    Button(
-                                        onClick = { /* action pour ajouter au panier par exemple */ },
-                                        modifier = Modifier
-                                            .width(80.dp)
-                                    ) {
-                                        if (item.level<=2){
+
+                                    val priceInt = shopCat.price.toInt()
+                                    val lockedByLevel = shopCat.level > levelUser
+                                    val canBuy = (!lockedByLevel) && (moneyUser >= priceInt)
+
+                                    if (lockedByLevel) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        ) {
                                             Icon(
-                                            imageVector = Icons.Filled.ShoppingCart,
-                                            contentDescription = "Ajouter au panier",
-                                            modifier = Modifier.size(40.dp)
+                                                imageVector = Icons.Filled.Lock,
+                                                contentDescription = "Verrouillé",
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(28.dp)
                                             )
                                             Text(
-                                                text = item.price.toString(),
-                                                textAlign = TextAlign.Center,
-                                                fontSize = 18.sp,
+                                                text = "Lvl ${shopCat.level}",
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                fontSize = 12.sp
                                             )
                                         }
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            if (!canBuy) {
+                                                if (lockedByLevel) {
+                                                    Toast.makeText(context, "Niveau insuffisant", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, "Pas assez d'argent", Toast.LENGTH_SHORT).show()
+                                                }
+                                                return@Button
+                                            }
+                                            // Mise à jour
+                                            PlayerData.money -= priceInt
+                                            playerData = PlayerData
+                                            moneyUser = PlayerData.money
+
+                                            // Mise à jour BDD et DataStore en arrière-plan
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                val existing: Cat = catDao.getByName(shopCat.name)
+                                                val updatedCat = existing.copy(
+                                                    price = shopCat.price,
+                                                    level = shopCat.level,
+                                                    obtenu = true
+                                                )
+                                                catDao.update(updatedCat)
+                                                dataStoreManager.savePlayerData(PlayerData)
+                                            }
+
+                                            Toast.makeText(context, "${shopCat.name} acheté !", Toast.LENGTH_SHORT).show()
+                                        },
+                                        enabled = canBuy,
+                                        modifier = Modifier
+                                            .width(100.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.ShoppingCart,
+                                            contentDescription = "Ajouter au panier",
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Text(
+                                            text = "${shopCat.price.toInt()}",
+                                            textAlign = TextAlign.Center,
+                                            fontSize = 16.sp,
+                                        )
+
                                     }
                                 }
                             }

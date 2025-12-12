@@ -814,7 +814,9 @@ fun CatInteractionPreview() {
                 cleanliness = 50,
                 affection = 0.5f,
                 achievementId = null,
-                obtenu = true
+                obtenu = true,
+                price = 0.0,
+                level = 1
             ),
         )
     }
