@@ -4,19 +4,24 @@ import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.os.Binder
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
+import android.os.IBinder
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,12 +29,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -38,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,33 +61,22 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import uqac.catwalk.ui.theme.CatwalkTheme
-import kotlin.math.asin
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
-import com.google.android.gms.location.Priority
-import android.provider.Settings
-import android.os.Binder
-import android.os.IBinder
-import android.content.ComponentName
-import android.content.ServiceConnection
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
 
 
 class WalkActivity : ComponentActivity() {
+    private val viewModel: walkViewModel by viewModels()
     private var locationService: LocationService? by mutableStateOf(null)
     private var isBound by mutableStateOf(false)
 
@@ -93,6 +87,18 @@ class WalkActivity : ComponentActivity() {
             val binder = service as LocationService.LocationBinder
             locationService = binder.getService()
             isBound = true
+
+            // Commencer à observer les mises à jour de localisation
+            // et les transmettre au ViewModel
+            locationService?.locationUpdates?.let { flow ->
+                lifecycleScope.launch {
+                    flow.collect { location ->
+                        location?.let {
+                            viewModel.updateLocation(it)
+                        }
+                    }
+                }
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -128,8 +134,8 @@ class WalkActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                             .background(colorResource(R.color.yellow_white)),
-                        context = this,
-                        locationService = this.locationService,
+                        // On passe directement le ViewModel
+                        viewModel = viewModel,
                     )
                 }
             }
@@ -145,13 +151,16 @@ fun isLocationEnabled(context: Context): Boolean {
 
 
 @Composable
-fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationService: LocationService?) {
+fun ProgressContent(modifier: Modifier = Modifier, viewModel: walkViewModel) {
+    val context = LocalContext.current
+    // Observez l'état depuis le ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
-    var progress by remember { mutableDoubleStateOf(0.0) }
+    // La gestion de l'activation de la localisation reste ici, car elle est liée à l'UI
+    var locationEnabled by remember { mutableStateOf(isLocationEnabled(context)) }
     val serviceIntent = remember { Intent(context, LocationService::class.java) }
 
-    var locationEnabled by remember { mutableStateOf(isLocationEnabled(context)) }
-
+    // --- Les launchers pour la permission et les paramètres restent inchangés ---
     val locationSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
@@ -169,61 +178,26 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationSer
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
+            locationEnabled = granted
             if (granted) {
-                locationEnabled = true
-                // Le service démarre via onStart de l'Activity et la logique de permission
                 context.startService(serviceIntent)
-            } else {
-                locationEnabled = false
             }
         }
     )
 
-    val location by locationService?.locationUpdates?.collectAsState() ?: remember { mutableStateOf(null) }
-
-    var PreviousLoc by remember { mutableStateOf<Location?>(null) }
-
-    // Ce LaunchedEffect se déclenchera chaque fois que `location` change
-    LaunchedEffect(location) {
-        location?.let { currentLocation -> // Using a more descriptive name than "it"
-            Toast.makeText(
-                context,
-                "Latitude: ${currentLocation.latitude}, Longitude: ${currentLocation.longitude}",
-                Toast.LENGTH_LONG
-            ).show()
-
-            PreviousLoc?.let { previous -> // Also good practice to use let for PreviousLoc
-                //d= 2R × sin⁻¹(√[sin²((θ₂ - θ₁)/2) + cosθ₁ × cosθ₂ × sin²((φ₂ - φ₁)/2)])
-                val lat1 = Math.toRadians(previous.latitude)
-                val lat2 = Math.toRadians(currentLocation.latitude)
-                val lon1 = Math.toRadians(previous.longitude)
-                val lon2 = Math.toRadians(currentLocation.longitude)
-                val distance = 2 * 6371400.0 * asin(
-                    sqrt(sin((lat2 - lat1) / 2).pow(2) + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2).pow(2))
-                )
-                progress += distance
-            }
-            PreviousLoc = currentLocation // Update PreviousLoc with the stable currentLocation
-        }
-    }
-
 
     LaunchedEffect(Unit) {
-        when (PackageManager.PERMISSION_GRANTED) {
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) -> {
-                if (isLocationEnabled(context)) {
-                    locationEnabled = true
-                    context.startService(serviceIntent)
-                } else {
-                    locationEnabled = false
-                }
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            locationEnabled = isLocationEnabled(context)
+            if (locationEnabled) {
+                context.startService(serviceIntent)
             }
-            else -> {
-                permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-            }
+        } else {
+            permissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -243,6 +217,23 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationSer
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center
             )
+            if (uiState.isTooFast){
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colorResource(R.color.red)
+                    )
+                ) {
+                    Text(
+                        text = "Vous allez trop vite ! La balade est mise en pause.",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
             Image(
                 painter = painterResource(id = R.drawable.walk_icon),
                 contentDescription = "Chat noir de profil qui marche.",
@@ -253,11 +244,11 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationSer
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Marché ${progress.toInt()} mètres", // Afficher en entier pour plus de lisibilité
+                    text = "Marché ${uiState.progress.toInt()} mètres", // Afficher en entier pour plus de lisibilité
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                val remplissage = (progress / 2500.0).toFloat().coerceIn(0f, 1f)
+                val remplissage = (uiState.progress / 2500.0).toFloat().coerceIn(0f, 1f)
                 LinearProgressIndicator(
                     progress = { remplissage },
                     modifier = Modifier
@@ -265,13 +256,10 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationSer
                         .padding(horizontal = 32.dp)
                 )
             }
-            Text(
-                text = "Localisation ${location?.latitude}, ${location?.longitude}",
-            )
             Button(
                 onClick = {
                     val intent = Intent(context, EndWalkActivity::class.java)
-                    intent.putExtra("progress", progress)
+                    intent.putExtra("progress", uiState.progress)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
 
                     // L'activity va se détacher automatiquement via onStop(),
@@ -323,13 +311,16 @@ fun ProgressContent(modifier: Modifier = Modifier, context: Context, locationSer
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun ProgressContentPreview() {
     CatwalkTheme {
+        // This preview is simplified and won't show the real progress.
+        // For a more complete preview, you might need to create a fake ViewModel.
         ProgressContent(
-            context = LocalContext.current,
-            locationService = null)
+            viewModel = walkViewModel() // Assuming a default constructor for preview
+        )
     }
 }
 
@@ -394,6 +385,7 @@ class LocationService : LifecycleService() {
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .build()
         } else {
+            @Suppress("DEPRECATION")
             return Notification.Builder(this)
                 .setContentTitle("Tracking Location")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
