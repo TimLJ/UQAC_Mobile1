@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +24,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -64,7 +63,6 @@ class CatListActivity : ComponentActivity() {
 fun CatContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    // Liste des noms de chats (36 noms pour remplir la grille 3x12)
     val database = AppDatabase.getDatabase(context = context)
     val catDao = database.CatDao()
     val cats by catDao.getDebloques().collectAsState(initial = emptyList())
@@ -91,14 +89,13 @@ fun CatContent(modifier: Modifier = Modifier) {
                     .fillMaxSize()
                     .background(color = colorResource(R.color.yellow_white))
             ) {
-                // Grillage de chats
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(start = 16.dp, end = 16.dp)
                 ) {
                     Text(
-                        text = "Mes Chats 🐱",
+                        text = "Mes Chats",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -116,34 +113,34 @@ fun CatContent(modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(cats) { cat ->
-                            Card(
+                            Column(
                                 modifier = Modifier
                                     .padding(bottom = 10.dp)
-                                    .height(80.dp)
+                                    .height(110.dp)
                                     .fillMaxWidth()
                                     .clickable {
-                                        val intent =
-                                            Intent(context, CatInteractionActivity::class.java)
+                                        val intent = Intent(context, CatInteractionActivity::class.java)
                                         intent.putExtra("catID", cat.id)
                                         context.startActivity(intent)
                                     },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = cat.name,
-                                        textAlign = TextAlign.Center,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
+                                Image(
+                                    painter = catPainter(cat.color),
+                                    contentDescription = cat.name,
+                                    modifier = Modifier
+                                        .height(80.dp)
+                                        .fillMaxWidth(),
+                                )
+                                Text(
+                                    text = cat.name,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
