@@ -26,7 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -53,7 +52,6 @@ import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
 
-@SuppressLint("DiscouragedApi", "LocalContextResourcesRead")
 @Composable
 fun catPainter(colorName: String?, @androidx.annotation.DrawableRes fallback: Int = R.drawable.chat_roux): androidx.compose.ui.graphics.painter.Painter {
     val context = LocalContext.current
@@ -83,21 +81,24 @@ class CatInteractionActivity : ComponentActivity() {
             val cat by catDao.getCatById(catId).collectAsState(initial = null)
 
             val DECAY_PER_DAY = 5 // Valeur de dégradation par jour
-            val DAY_MS = 24L * 60L * 60L * 1000L
-            val scope = rememberCoroutineScope()
+            val DAY_MS = 24*60*60*1000 // Millisecondes dans un jour
+            val scope = rememberCoroutineScope() // CoroutineScope pour les opérations BDD
 
             LaunchedEffect(cat) {
                 val loaded = cat ?: return@LaunchedEffect
-                val now = System.currentTimeMillis()
-                val days = ((now - loaded.lastDecayAt) / DAY_MS).toInt()
-                if (days > 0) {
-                    val decay = days * DECAY_PER_DAY
+                val now = System.currentTimeMillis() // temps actuel en ms
+                val days = ((now - loaded.lastDecayAt) / DAY_MS).toInt() // jours depuis la dernière dégradation
+                if (days > 0) { // appliquer la dégradation si au moins un jour s'est écoulé
+                    val decay = days * DECAY_PER_DAY // dégradation totale
+                    // nouvelles valeurs de propreté et d'amusement
                     val newCleanliness = max(0, loaded.cleanliness - decay)
                     val newHappiness = max(0, loaded.happiness - decay)
 
                     // calculer affection liée à la fréquence de visite
                     val visitInc = when {
+                        // plus de 7 jours depuis la dernière visite
                         now - loaded.lastSeenAt > 7 * DAY_MS -> 0.03f
+                        // entre 3 et 7 jours
                         now - loaded.lastSeenAt > DAY_MS -> 0.01f
                         else -> 0f
                     }
@@ -105,7 +106,7 @@ class CatInteractionActivity : ComponentActivity() {
                     // pénalité si propreté / amusement trop bas
                     val penalty = (if (newCleanliness < 50) 0.2f else 0f) + (if (newHappiness < 50) 0.2f else 0f)
 
-                    val newAffection = (loaded.affection + visitInc - penalty).coerceIn(0f, 1f)
+                    val newAffection = (loaded.affection + visitInc - penalty).coerceIn(0f, 0.4f)
 
                     scope.launch(Dispatchers.IO) {
                         catDao.updateCatCleanlinessAndLastDecay(loaded.id, newCleanliness, now)
@@ -137,6 +138,7 @@ class CatInteractionActivity : ComponentActivity() {
 }
 
 // composable that composes the screen from smaller parts
+@SuppressLint("UseKtx")
 @Composable
 fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     val context = LocalContext.current
@@ -150,10 +152,51 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
     var amusement by remember { mutableStateOf(cat.happiness) }
     var affection by remember { mutableStateOf(cat.affection) }
 
+    // States pour les dialogues de félicitations
+    var showCongratsDialog by remember { mutableStateOf(false) }
+    var congratsShownForSession by remember { mutableStateOf(false) }
+
+    // états précédents pour détecter une montée jusqu'au palier
+    var prevProprete by remember { mutableStateOf(cat.cleanliness) }
+    var prevAmusement by remember { mutableStateOf(cat.happiness) }
+
     // Synchroniser les états locaux quand la BDD renvoie une nouvelle valeur
     LaunchedEffect(cat.cleanliness) { proprete = cat.cleanliness }
     LaunchedEffect(cat.happiness) { amusement = cat.happiness }
     LaunchedEffect(cat.affection) { affection = cat.affection }
+
+    // Déclencheur qui affiche la boîte de dialogue quand les deux stats sont au maximum
+    LaunchedEffect(proprete, amusement) {
+        val cleaned = proprete >= 290
+        val played = amusement >= 290
+
+        val reachedByIncrease =
+            (prevProprete < 290 && proprete >= 290) ||
+                    (prevAmusement < 290 && amusement >= 290)
+
+        if (cleaned && played && !congratsShownForSession && reachedByIncrease) {
+            congratsShownForSession = true
+            showCongratsDialog = true
+
+            val newAff = (affection + 0.1f).coerceIn(0f, 0.1f)
+            affection = newAff
+            scope.launch(Dispatchers.IO) {
+                catDao.updateCatAffectionAndLastSeen(
+                    cat.id,
+                    newAff,
+                    System.currentTimeMillis()
+                )
+            }
+        }
+
+        if (!cleaned || !played) {
+            congratsShownForSession = false
+        }
+
+        prevProprete = proprete
+        prevAmusement = amusement
+    }
+
 
     var isWashing by remember { mutableStateOf(false) }
     var isPetting by remember { mutableStateOf(false) }
@@ -324,7 +367,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         .padding(top = 16.dp)
                 ) {
                     repeat(3) { index ->
-                        val heartIcon = if (index < affection)
+                        val heartIcon = if (index < (affection * 3)) // comparer sur 3 coeurs
                             painterResource(R.drawable.full_heart)
                         else
                             painterResource(R.drawable.empty_heart)
@@ -388,6 +431,18 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
+                if (showCongratsDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showCongratsDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = { showCongratsDialog = false }) {
+                                Text("Super")
+                            }
+                        },
+                        title = { Text("Bravo !") },
+                        text = { Text("Ton chat est propre et heureux \uD83D\uDC31\n") }
+                    )
+                }
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -398,27 +453,27 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Propreté", fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(
-                        progress = { proprete / 300f },
-                        modifier = Modifier
-                                                        .width(130.dp)
-                                                        .height(10.dp)
-                                                        .padding(top = 4.dp),
-                        color = Color(0xFF4CAF50),
-                        trackColor = Color(0xFFC8E6C9),
-                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                            progress = { proprete / 300f },
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(10.dp)
+                                .padding(top = 4.dp),
+                            color = Color(0xFF4CAF50),
+                            trackColor = Color(0xFFC8E6C9),
+                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                         )
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Amusement", fontWeight = FontWeight.Bold)
                         LinearProgressIndicator(
-                        progress = { amusement / 300f },
-                        modifier = Modifier
-                                                        .width(130.dp)
-                                                        .height(10.dp)
-                                                        .padding(top = 4.dp),
-                        color = Color(0xFFFF9800),
-                        trackColor = Color(0xFFFFE0B2),
-                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                            progress = { amusement / 300f },
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(10.dp)
+                                .padding(top = 4.dp),
+                            color = Color(0xFFFF9800),
+                            trackColor = Color(0xFFFFE0B2),
+                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                         )
                     }
                 }
@@ -437,13 +492,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                             catDao.updateCatCleanlinessAndLastDecay(id = cat.id, cleanliness = newCleanliness, lastDecayAt = System.currentTimeMillis())
                         }
                     },
-                    onAffectionIncrease = { delta ->
-                        affection = (affection + delta).coerceIn(0f, 0.2f)
-                        scope.launch(Dispatchers.IO) {
-                            val now = System.currentTimeMillis()
-                            catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
-                        }
-                    },
                     onClose = { isWashing = false }
                 )
 
@@ -455,7 +503,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                 PettingOverlay(
                     catBounds = catBounds,
                     onAffectionIncrease = { delta ->
-                        affection = (affection + delta).coerceIn(0f, 0.5f)
+                        affection = (affection + delta).coerceIn(0f, 0.2f)
                         scope.launch(Dispatchers.IO) {
                             val now = System.currentTimeMillis()
                             catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
@@ -475,13 +523,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         amusement = newAmusement
                         scope.launch(Dispatchers.IO) {
                             catDao.updateCatHappinessAndLastDecay(id = cat.id, happiness = newAmusement, lastDecayAt = System.currentTimeMillis())
-                        }
-                    },
-                    onAffectionIncrease = { delta ->
-                        affection = (affection + delta).coerceIn(0f, 0.3f)
-                        scope.launch(Dispatchers.IO) {
-                            val now = System.currentTimeMillis()
-                            catDao.updateCatAffectionAndLastSeen(cat.id, affection, now)
                         }
                     },
                     onClose = { isPlaying = false }
@@ -695,7 +736,6 @@ fun WashingOverlay(
     initialProprete: Int,
     catBounds: Rect,
     onPropreteChange: (Int) -> Unit,
-    onAffectionIncrease: (Float) -> Unit = {},
     onClose: () -> Unit
 ) {
     var proprete by remember { mutableIntStateOf(initialProprete) }
@@ -711,7 +751,6 @@ fun WashingOverlay(
         onHit = { _, _ ->
             proprete = (proprete + 1).coerceAtMost(300)
             onPropreteChange(proprete)
-            onAffectionIncrease(0.02f)
         },
         onClose = onClose
     )
@@ -756,7 +795,6 @@ fun PlayingOverlay(
     initialAmusement: Int,
     catBounds: Rect,
     onAmusementChange: (Int) -> Unit,
-    onAffectionIncrease: (Float) -> Unit = {},
     onClose: () -> Unit
 ) {
     var amusement by remember { mutableIntStateOf(initialAmusement) }
@@ -772,7 +810,6 @@ fun PlayingOverlay(
         onHit = { _, _ ->
             amusement = (amusement + 1).coerceAtMost(300)
             onAmusementChange(amusement)
-            onAffectionIncrease(0.03f)
         },
         onClose = onClose
     )
