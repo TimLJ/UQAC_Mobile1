@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +30,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,7 +42,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,7 +52,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.PlayerData
-import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.ui.theme.CatwalkTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -97,76 +94,97 @@ fun MainTopBar(
     context: Context,
     modifier: Modifier = Modifier
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    Box(
+    Row(
         modifier = modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .background(colorResource(R.color.light_yellow)),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+
+        // Bouton succès
+        Button(
+            onClick = {
+                context.startActivity(
+                    Intent(context, AchievementsActivity::class.java)
+                )
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = PaddingValues(0.dp),
             modifier = Modifier
-                .background(colorResource(R.color.light_yellow))
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
+                .fillMaxHeight()
         ) {
-            Button(
-                onClick = {
-                    val intent = Intent(context, AchievementsActivity::class.java)
-                    context.startActivity(intent)
-                },
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .size(250.dp, 60.dp)
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = "Succès",
+                tint = Color.White,
+                modifier = Modifier.size(30.dp)
+            )
+        }
+
+        // Barre d'expérience
+        Button(
+            onClick = {
+                context.startActivity(
+                    Intent(context, AchievementsActivity::class.java)
+                )
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = PaddingValues(0.dp),
+            modifier = Modifier
+                .weight(3f)
+                .height(70.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterStart
             ) {
                 Image(
                     painter = painterResource(R.drawable.exp_bar),
-                    contentDescription = "Barre d'expérience, qui ressemble à une fiole avec du liquide violet.",
+                    contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(R.drawable.lvl1),
+                    contentDescription = "Niveau 1",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorResource(R.color.light_yellow))
+                        .size(60.dp)
+                        .align(Alignment.TopStart)
                 )
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = MsMoney.toString(),
-                        textAlign = TextAlign.Center,
-                        fontSize = 25.sp,
-                        modifier = Modifier
-                            .size(height = 40.dp, width = 80.dp)
-                            .padding(start = 15.dp)
-                            .offset(40.dp)
-                            .border(BorderStroke(2.dp, colorResource(R.color.orange)))
-                            .background(colorResource(R.color.white))
-                            .offset(x = 5.dp, y = 5.dp)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.paw_coin),
-                        contentDescription = "Image de pièce chat",
-                        modifier = Modifier
-                            .size(55.dp)
-                    )
-                }
-            }
-
         }
-        Image(
-            painter = painterResource(R.drawable.lvl1),
-            contentDescription = "Niveau un",
+
+        // Argent
+        Box(
             modifier = Modifier
-                .size(70.dp, 60.dp)
-        )
+                .weight(1.5f),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = MsMoney.toString(),
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(start = 30.dp)
+                        .border(2.dp, colorResource(R.color.orange))
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                )
+                Image(
+                    painter = painterResource(R.drawable.paw_coin),
+                    contentDescription = "Pièce",
+                    modifier = Modifier
+                        .size(45.dp)
+                        .align(Alignment.CenterStart)
+                )
+            }
+        }
     }
 }
+
 
 // Bottom bar of the app containg buttons for the shop, the list of cats, and starting a walk
 @Composable
