@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.ui.unit)
+    implementation(libs.androidx.compose.animation.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

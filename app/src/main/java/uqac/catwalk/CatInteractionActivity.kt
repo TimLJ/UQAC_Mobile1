@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
+import uqac.catwalk.ui.animation.CongratsDialog
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
@@ -432,18 +433,11 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
-                if (showCongratsDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showCongratsDialog = false },
-                        confirmButton = {
-                            TextButton(onClick = { showCongratsDialog = false }) {
-                                Text("Super")
-                            }
-                        },
-                        title = { Text("Bravo !") },
-                        text = { Text("Ton chat est propre et heureux \uD83D\uDC31\n") }
-                    )
-                }
+                CongratsDialog(
+                    visible = showCongratsDialog,
+                    onDismiss = { showCongratsDialog = false }
+                )
+
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
