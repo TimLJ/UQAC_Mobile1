@@ -2,7 +2,6 @@ package uqac.catwalk.ui.bar
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -27,12 +28,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,100 +54,99 @@ import uqac.catwalk.sauvegarde.PlayerData
 // Top bar for every screen that is not the main screen
 @Composable
 fun AppTopBar(
-    context: Context,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val Player by remember { mutableStateOf(PlayerData) }
-    Box(
-        modifier = modifier,
+    val player = PlayerData
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .background(colorResource(R.color.light_yellow))
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .background(colorResource(R.color.light_yellow))
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Bouton Home en haut à gauche
-            Button(
-                onClick = {
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.light_blue)
-                ),
-                modifier = Modifier
-                    .padding(start = 10.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Home,
-                    contentDescription = "Retour à l'accueil",
-                    tint = colorResource(R.color.black),
-                )
+
+        // Bouton Home
+        IconButton(
+            onClick = {
+                context.startActivity(Intent(context, MainActivity::class.java))
             }
-            // Barre d'experience
-            Button(
-                onClick = {
-                    val intent = Intent(context, AchievementsActivity::class.java)
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .size(200.dp, 80.dp)
-                    .padding(start = 5.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Home,
+                contentDescription = "Accueil",
+                tint = colorResource(R.color.black)
+            )
+        }
+
+        // Bouton Étoile
+        IconButton(
+            onClick = {
+                context.startActivity(Intent(context, AchievementsActivity::class.java))
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = "Succès",
+                tint = colorResource(R.color.orange)
+            )
+        }
+
+        // Barre d’XP (prend l’espace central)
+        Button(
+            onClick = {
+                context.startActivity(Intent(context, AchievementsActivity::class.java))
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = PaddingValues(0.dp),
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterStart
             ) {
                 Image(
                     painter = painterResource(R.drawable.exp_bar),
-                    contentDescription = "Barre d'expérience, qui ressemble à une fiole avec du liquide violet.",
+                    contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorResource(R.color.light_yellow))
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(R.drawable.lvl1),
+                    contentDescription = "Niveau",
+                    modifier = Modifier.size(40.dp)
+                        .align(Alignment.CenterStart)
+
                 )
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.CenterStart,
-                    modifier = Modifier
-                        .padding(end = 10.dp)
-                ) {
-                    Text(
-                        text = Player.money.toString(),
-                        textAlign = TextAlign.Center,
-                        fontSize = 25.sp,
-                        modifier = Modifier
-                            .size(height = 40.dp, width = 80.dp)
-                            .padding(start = 15.dp)
-                            .offset(25.dp)
-                            .border(BorderStroke(2.dp, colorResource(R.color.orange)))
-                            .background(colorResource(R.color.white))
-                            .offset(x = 5.dp, y = 5.dp)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.paw_coin),
-                        contentDescription = "Image de pièce chat",
-                        modifier = Modifier
-                            .size(55.dp)
-                    )
-                }
-            }
-
         }
-        Image(
-            painter = painterResource(R.drawable.lvl1),
-            contentDescription = "Niveau un",
-            modifier = Modifier
-                .size(65.dp, 55.dp)
-                .offset(x = 80.dp)
-        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Argent + icône
+        Box(
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = player.money.toString(),
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .padding(start = 24.dp)
+                    .border(2.dp, colorResource(R.color.orange))
+                    .background(colorResource(R.color.white))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+
+            Image(
+                painter = painterResource(R.drawable.paw_coin),
+                contentDescription = "Pièce",
+                modifier = Modifier.size(32.dp)
+            )
+        }
     }
 }
 

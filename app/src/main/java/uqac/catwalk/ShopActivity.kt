@@ -118,7 +118,6 @@ fun ShopContent(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             AppTopBar(
-                context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .height(80.dp),

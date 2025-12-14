@@ -212,7 +212,6 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             .background(Color(0xFFFFFFFF)),
         topBar = {
             AppTopBar(
-                context = context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .height(80.dp)

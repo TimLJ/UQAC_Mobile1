@@ -79,7 +79,6 @@ fun LvContent(modifier: Modifier = Modifier) {
     Scaffold (
         topBar = {
             AppTopBar(
-                context,
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .height(80.dp)
