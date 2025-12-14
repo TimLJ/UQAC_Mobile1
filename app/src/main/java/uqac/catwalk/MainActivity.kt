@@ -394,6 +394,8 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
         3 to R.drawable.chat_roux_dodo
     )
 
+    var affection by remember { mutableStateOf(cat.affection) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -428,24 +430,18 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
             modifier = Modifier
                 .offset(y = -30.dp)
         ) {
-            Image(
-                painter = painterResource(R.drawable.full_heart),
-                contentDescription = "Coeur rouge",
-                modifier = Modifier
-                    .size(20.dp)
-            )
-            Image(
-                painter = painterResource(R.drawable.full_heart),
-                contentDescription = "Coeur rouge",
-                modifier = Modifier
-                    .size(20.dp)
-            )
-            Image(
-                painter = painterResource(R.drawable.full_heart),
-                contentDescription = "Coeur rouge",
-                modifier = Modifier
-                    .size(20.dp)
-            )
+            repeat(3) { index ->
+                val heartIcon = if (index < (affection * 3)) // comparer sur 3 coeurs
+                    painterResource(R.drawable.full_heart)
+                else
+                    painterResource(R.drawable.empty_heart)
+                Image(
+                    painter = heartIcon,
+                    contentDescription = "Cœur ${index + 1}",
+                    modifier = Modifier
+                        .size(20.dp)
+                )
+            }
         }
         Button(
             onClick = {
