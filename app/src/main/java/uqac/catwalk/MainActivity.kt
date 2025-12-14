@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -36,10 +36,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,14 +56,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.PlayerData
-import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.ui.theme.CatwalkTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.DataStoreManager
 import uqac.catwalk.sauvegarde.MsMoney
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.colorResource
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -287,6 +294,15 @@ fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val Player by remember { mutableStateOf(PlayerData) }
+    var imageWidth by remember { mutableStateOf(0) }
+    var containerWidth by remember { mutableStateOf(0) }
+
+    LaunchedEffect(imageWidth, containerWidth) {
+        if (imageWidth > containerWidth) {
+            val overflow = imageWidth - containerWidth
+            scrollState.scrollTo(overflow / 2 - 60)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -303,6 +319,9 @@ fun MainContent(modifier: Modifier = Modifier) {
                 modifier = modifier
                     .padding(paddingValues)
                     .fillMaxSize()
+                    .onGloballyPositioned { coords ->
+                        containerWidth = coords.size.width
+                    }
                     .horizontalScroll(scrollState)
             ) {
                 Image(
@@ -311,6 +330,9 @@ fun MainContent(modifier: Modifier = Modifier) {
                     contentScale = ContentScale.FillHeight,
                     modifier = Modifier
                         .fillMaxHeight()
+                        .onGloballyPositioned { coords ->
+                            imageWidth = coords.size.width
+                        }
                 )
 
                 Image(
@@ -326,6 +348,7 @@ fun MainContent(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .padding(start = 100.dp, top = 80.dp)
                 )
+                SleepyCat(modifier, 100.dp, 380.dp)
             }
         },
         
@@ -338,6 +361,81 @@ fun MainContent(modifier: Modifier = Modifier) {
             )
         }
     )
+}
+
+@Composable
+fun SleepyCat(modifier: Modifier = Modifier, startPadding: Dp, topPadding: Dp) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(start = startPadding, top = topPadding)
+            .alpha(1f)
+    ) {
+        Text(
+            text = "Minou",
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 1f),
+            fontWeight = FontWeight.Black,
+            modifier = Modifier
+                .alpha(1f)
+                .offset(y = 40.dp)
+        )
+        Button(
+            onClick = {
+                Log.d("Button","Bouton clické")
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .size(120.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.chat_blanc_noir_dodo),
+                contentDescription = "Chat blanc et noir qui dort.",
+            )
+        }
+        Row(
+            modifier = Modifier
+                .offset(y = -30.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.full_heart),
+                contentDescription = "Coeur rouge",
+                modifier = Modifier
+                    .size(20.dp)
+            )
+            Image(
+                painter = painterResource(R.drawable.full_heart),
+                contentDescription = "Coeur rouge",
+                modifier = Modifier
+                    .size(20.dp)
+            )
+            Image(
+                painter = painterResource(R.drawable.full_heart),
+                contentDescription = "Coeur rouge",
+                modifier = Modifier
+                    .size(20.dp)
+            )
+        }
+        Button(
+            onClick = {
+                Log.d("SeeButton","Bouton voir clicke")
+            },
+            border = BorderStroke(4.dp, MaterialTheme.colorScheme.onSecondary),
+            modifier = Modifier
+                .alpha(1f)
+                .offset(y = -30.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            enabled = true
+        ) {
+            Text(
+                text = "Voir",
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 1f)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
