@@ -52,6 +52,7 @@ import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
 
+@SuppressLint("LocalContextResourcesRead", "DiscouragedApi")
 @Composable
 fun catPainter(colorName: String?, @androidx.annotation.DrawableRes fallback: Int = R.drawable.chat_roux): androidx.compose.ui.graphics.painter.Painter {
     val context = LocalContext.current
