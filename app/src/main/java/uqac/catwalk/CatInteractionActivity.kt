@@ -1,4 +1,3 @@
-// kotlin
 package uqac.catwalk
 
 import android.annotation.SuppressLint
@@ -382,13 +381,21 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                         )
                     }
                 }
-                // Image du chat avec saleté superposée
+                // Image du chat
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Construire le nom à afficher : si on caresse, on ajoute "_heureux" à la base
+                    val displayColorName = if (isPetting) {
+                        cat.color.substringBefore('.').let { base ->
+                            if (base.endsWith("_heureux")) base else "${base}_heureux"
+                        }
+                    } else {
+                        cat.color
+                    }
                     Image(
-                        painter = catPainter(cat.color),
+                        painter = catPainter(displayColorName),
                         contentDescription = "Chat",
                         modifier = Modifier
                             .size(300.dp)
@@ -404,6 +411,7 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
                             },
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
+                    // Image de saleté selon le niveau de propreté
                     if (proprete < 100) {
                         Image(
                             painter = painterResource(R.drawable.salete3),

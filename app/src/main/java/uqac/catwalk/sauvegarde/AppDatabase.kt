@@ -121,8 +121,8 @@ abstract class AppDatabase : RoomDatabase() {
                     level = 1
                 ),
                 Cat(
-                    name = "Odie",
-                    color = "chat_gris",
+                    name = "Snowball",
+                    color = "chat_blanc",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0f,
@@ -133,7 +133,7 @@ abstract class AppDatabase : RoomDatabase() {
                 ),
                 Cat(
                     name = "Félix",
-                    color = "chat_roux",
+                    color = "chat_noir",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0f,
@@ -143,8 +143,8 @@ abstract class AppDatabase : RoomDatabase() {
                     level = 2
                 ),
                 Cat(
-                    name = "Luna",
-                    color = "chat_blanc_noir",
+                    name = "Lily",
+                    color = "chat_tricolore",
                     happiness = 50,
                     cleanliness = 50,
                     affection = 0f,
