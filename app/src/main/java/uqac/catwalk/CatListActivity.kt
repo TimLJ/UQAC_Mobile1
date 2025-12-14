@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -113,34 +114,37 @@ fun CatContent(modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(cats) { cat ->
-                            Column(
-                                modifier = Modifier
-                                    .padding(bottom = 10.dp)
-                                    .height(110.dp)
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val intent = Intent(context, CatInteractionActivity::class.java)
-                                        intent.putExtra("catID", cat.id)
-                                        context.startActivity(intent)
-                                    },
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = catPainter(cat.color),
-                                    contentDescription = cat.name,
+                            Card {
+                                Column(
                                     modifier = Modifier
-                                        .height(80.dp)
-                                        .fillMaxWidth(),
-                                )
-                                Text(
-                                    text = cat.name,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                        .padding(bottom = 10.dp)
+                                        .height(110.dp)
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val intent =
+                                                Intent(context, CatInteractionActivity::class.java)
+                                            intent.putExtra("catID", cat.id)
+                                            context.startActivity(intent)
+                                        },
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        painter = catPainter(cat.color),
+                                        contentDescription = cat.name,
+                                        modifier = Modifier
+                                            .height(80.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                    Text(
+                                        text = cat.name,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }
