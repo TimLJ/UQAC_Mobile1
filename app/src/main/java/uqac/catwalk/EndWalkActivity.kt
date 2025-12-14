@@ -62,7 +62,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
     val distance = intent.getDoubleExtra("progress", 0.0)
     val coroutineScope = rememberCoroutineScope()
     val affection = (distance / 2500).toInt() * 0.3
-    val pièces = (distance / 50).toInt()
+    val pieces = (distance / 50).toInt()
 
 
 
@@ -91,7 +91,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
 
         // Pièces
         Text(
-            text = "Pièces: $pièces",
+            text = "Pièces: $pieces",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.secondary
@@ -111,7 +111,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
             onClick = {
                 coroutineScope.launch {
                     addDistance(distance.toInt(), context)
-                    updtMoney(pièces, context)
+                    updtMoney(pieces, context)
                     //ajouter l'affection du chat
                     val intent = Intent(context, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK

@@ -43,6 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.ui.bar.AppBottomBar
+import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class CatListActivity : ComponentActivity() {

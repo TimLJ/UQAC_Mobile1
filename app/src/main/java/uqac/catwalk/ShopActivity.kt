@@ -60,6 +60,8 @@ import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.DataStoreManager
 import uqac.catwalk.sauvegarde.PlayerData
 import uqac.catwalk.sauvegarde.entities.Cat
+import uqac.catwalk.ui.bar.AppBottomBar
+import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class ShopCat(val name: String, val color: String, val price: Double, val level: Int)

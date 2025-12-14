@@ -1,5 +1,6 @@
 package uqac.catwalk
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
@@ -312,6 +313,7 @@ fun ProgressContent(modifier: Modifier = Modifier, viewModel: walkViewModel) {
 }
 
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun ProgressContentPreview() {

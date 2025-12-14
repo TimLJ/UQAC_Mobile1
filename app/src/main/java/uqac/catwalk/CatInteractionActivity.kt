@@ -48,6 +48,7 @@ import kotlin.math.max
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.animation.CongratsDialog
+import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)

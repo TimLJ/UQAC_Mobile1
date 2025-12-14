@@ -69,6 +69,8 @@ import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.PlayerData
 import uqac.catwalk.sauvegarde.entities.Achievement
 import uqac.catwalk.sauvegarde.updtMoney
+import uqac.catwalk.ui.bar.AppBottomBar
+import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class AchievementsActivity : ComponentActivity() {
@@ -84,106 +86,6 @@ class AchievementsActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-// Top bar for every screen that is not the main screen
-@Composable
-fun AppTopBar(
-    context: Context,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val Player by remember { mutableStateOf(PlayerData) }
-    Box(
-        modifier = modifier,
-    ) {
-        Row(
-            modifier = Modifier
-                .background(colorResource(R.color.light_yellow))
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Bouton Home en haut à gauche
-            Button(
-                onClick = {
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.light_blue)
-                ),
-                modifier = Modifier
-                    .padding(start = 10.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Home,
-                    contentDescription = "Retour à l'accueil",
-                    tint = colorResource(R.color.black),
-                )
-            }
-            // Barre d'experience
-            Button(
-                onClick = {
-                    val intent = Intent(context, AchievementsActivity::class.java)
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .size(200.dp, 80.dp)
-                    .padding(start = 5.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.exp_bar),
-                    contentDescription = "Barre d'expérience, qui ressemble à une fiole avec du liquide violet.",
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(colorResource(R.color.light_yellow))
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.CenterStart,
-                    modifier = Modifier
-                        .padding(end = 10.dp)
-                ) {
-                    Text(
-                        text = Player.money.toString(),
-                        textAlign = TextAlign.Center,
-                        fontSize = 25.sp,
-                        modifier = Modifier
-                            .size(height = 40.dp, width = 80.dp)
-                            .padding(start = 15.dp)
-                            .offset(25.dp)
-                            .border(BorderStroke(2.dp, colorResource(R.color.orange)))
-                            .background(colorResource(R.color.white))
-                            .offset(x = 5.dp, y = 5.dp)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.paw_coin),
-                        contentDescription = "Image de pièce chat",
-                        modifier = Modifier
-                            .size(55.dp)
-                    )
-                }
-            }
-
-        }
-        Image(
-            painter = painterResource(R.drawable.lvl1),
-            contentDescription = "Niveau un",
-            modifier = Modifier
-                .size(65.dp, 55.dp)
-                .offset(x = 80.dp)
-        )
     }
 }
 
