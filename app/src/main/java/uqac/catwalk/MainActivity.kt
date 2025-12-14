@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +70,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.entities.Cat
+
+data class Coords (
+    val x: Dp,
+    val y: Dp
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -294,6 +302,11 @@ fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val Player by remember { mutableStateOf(PlayerData) }
+
+    val database = AppDatabase.getDatabase(context = context)
+    val catDao = database.CatDao()
+    val cats by catDao.getDebloques().collectAsState(initial = emptyList())
+
     var imageWidth by remember { mutableStateOf(0) }
     var containerWidth by remember { mutableStateOf(0) }
 
@@ -348,7 +361,9 @@ fun MainContent(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .padding(start = 100.dp, top = 80.dp)
                 )
-                SleepyCat(modifier, 100.dp, 380.dp)
+                cats.forEach { cat ->
+                    SleepyCat(modifier, context, cat)
+                }
             }
         },
         
@@ -364,15 +379,30 @@ fun MainContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SleepyCat(modifier: Modifier = Modifier, startPadding: Dp, topPadding: Dp) {
+fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
+    // All cats coordinates
+    val catCoords = mapOf(
+        1 to Coords(60.dp, 350.dp),
+        2 to Coords(300.dp, 380.dp),
+        3 to Coords(400.dp, 180.dp)
+    )
+
+    // All cats sleeping colors:
+    val catColors = mapOf(
+        1 to R.drawable.chat_blanc_noir_dodo,
+        2 to R.drawable.chat_gris_dodo,
+        3 to R.drawable.chat_roux_dodo
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(start = startPadding, top = topPadding)
+            .padding(start = catCoords[cat.id]?.x ?: 0.dp,
+                top = catCoords[cat.id]?.y ?: 0.dp)
             .alpha(1f)
     ) {
         Text(
-            text = "Minou",
+            text = cat.name,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 1f),
             fontWeight = FontWeight.Black,
             modifier = Modifier
@@ -390,7 +420,7 @@ fun SleepyCat(modifier: Modifier = Modifier, startPadding: Dp, topPadding: Dp) {
                 .size(120.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.chat_blanc_noir_dodo),
+                painter = painterResource(catColors[cat.id] ?: R.drawable.chat_blanc_noir_dodo) ,
                 contentDescription = "Chat blanc et noir qui dort.",
             )
         }
@@ -419,7 +449,10 @@ fun SleepyCat(modifier: Modifier = Modifier, startPadding: Dp, topPadding: Dp) {
         }
         Button(
             onClick = {
-                Log.d("SeeButton","Bouton voir clicke")
+                val intent =
+                    Intent(context, CatInteractionActivity::class.java)
+                intent.putExtra("catID", cat.id)
+                context.startActivity(intent)
             },
             border = BorderStroke(4.dp, MaterialTheme.colorScheme.onSecondary),
             modifier = Modifier
