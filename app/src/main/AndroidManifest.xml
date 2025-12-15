@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".EndWalkActivity"
+            android:name=".walk.EndWalkActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
@@ -48,7 +48,7 @@
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
         <activity
-            android:name=".WalkActivity"
+            android:name=".walk.WalkActivity"
             android:exported="false"
             android:theme="@style/Theme.Catwalk" />
 
@@ -58,7 +58,7 @@
             android:theme="@style/Theme.Catwalk" />
 
         <service
-            android:name=".LocationService"
+            android:name=".walk.LocationService"
             android:foregroundServiceType="location"
             android:exported="false" />
     </application>
