@@ -39,7 +39,7 @@ class walkViewModel : ViewModel() {
                         recentSpeeds.addLast(speed)
 
                         val averageSpeed = recentSpeeds.average()
-                        val isTooFast = averageSpeed >= 4.2 // 4.2 m/s ≈ 15 km/h
+                        val isTooFast = averageSpeed >= 5.6 // 5.6 m/s ≈ 20 km/h
 
                         _uiState.update { currentState ->
                             currentState.copy(

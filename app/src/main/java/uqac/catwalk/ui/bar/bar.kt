@@ -61,17 +61,19 @@ fun AppTopBar(
     val context = LocalContext.current
     val player = PlayerData
 
-    var expDrawable = if (player.Xp < 25) {
+    // Valeurs différentes pour mettre à jour la barre d'exp
+    val expDrawable = if (player.Xp < 25) {
         R.drawable.exp_bar
-    } else if (player.Xp >= 25 && player.Xp < 50) {
+    } else if (player.Xp < 50) {
         R.drawable.exp_bar1
-    } else if (player.Xp >= 50 && player.Xp < 75) {
+    } else if (player.Xp < 75) {
         R.drawable.exp_bar2
     } else {
         R.drawable.exp_bar3
     }
 
-    var lvlDrawable = if (player.Lv == 1) {
+    // Valeurs différentes pour mettre à jour le niveau du joueur
+    val lvlDrawable = if (player.Lv == 1) {
         R.drawable.lvl1
     } else if (player.Lv == 2) {
         R.drawable.lvl2
@@ -130,12 +132,14 @@ fun AppTopBar(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.CenterStart
             ) {
+                // Image de la barre d'exp
                 Image(
                     painter = painterResource(expDrawable),
                     contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxSize()
                 )
+                // Image du niveau du joueur
                 Image(
                     painter = painterResource(lvlDrawable),
                     contentDescription = "Niveau",
@@ -181,18 +185,18 @@ fun MainTopBar(
 ) {
 
     val player = PlayerData
-
-    var expDrawable = if (player.Xp < 25) {
+    // Valeurs différentes pour mettre à jour la barre d'exp
+    val expDrawable = if (player.Xp < 25) {
         R.drawable.exp_bar
-    } else if (player.Xp >= 25 && player.Xp < 50) {
+    } else if (player.Xp < 50) {
         R.drawable.exp_bar1
-    } else if (player.Xp >= 50 && player.Xp < 75) {
+    } else if (player.Xp < 75) {
         R.drawable.exp_bar2
     } else {
         R.drawable.exp_bar3
     }
-
-    var lvlDrawable = if (player.Lv == 1) {
+    // Valeurs différentes pour mettre à jour le niveau du joueur
+    val lvlDrawable = if (player.Lv == 1) {
         R.drawable.lvl1
     } else if (player.Lv == 2) {
         R.drawable.lvl2
@@ -239,12 +243,14 @@ fun MainTopBar(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.CenterStart
             ) {
+                // Image barre d'exp
                 Image(
                     painter = painterResource(expDrawable),
                     contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxSize()
                 )
+                // Image niveau du joueur
                 Image(
                     painter = painterResource(lvlDrawable),
                     contentDescription = "Niveau 1",
@@ -294,7 +300,7 @@ fun AppBottomBar(
     Box(
         modifier = modifier
     ) {
-        // Bottom navigation bar taking 1/8 of screen height
+        // Barre de navigation qui prend 1/8 de l'écran
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -303,7 +309,7 @@ fun AppBottomBar(
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            // Shop section
+            // Bouton Achat
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -325,7 +331,7 @@ fun AppBottomBar(
                     Text("Boutique", color = colorResource(R.color.black))
                 }
             }
-
+            // Barre de séparation
             VerticalDivider(
                 color = colorResource(R.color.black),
                 thickness = 1.dp,
@@ -333,7 +339,7 @@ fun AppBottomBar(
                     .fillMaxHeight()
             )
 
-            // Cat section
+            // Bouton Chats
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -356,7 +362,7 @@ fun AppBottomBar(
                     Text("Chats", color = colorResource(R.color.black))
                 }
             }
-
+            // Barre de séparation
             VerticalDivider(
                 color = colorResource(R.color.black),
                 thickness = 1.dp,
@@ -364,7 +370,7 @@ fun AppBottomBar(
                     .fillMaxHeight()
             )
 
-            // Walk section
+            // Bouton Marche
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -397,7 +403,7 @@ fun AppBottomBar(
     }
 }
 
-// Bottom bar specific to the cat interaction screen containing buttons to play, wash, or pet the cat
+// Barre du bas spécifique à l'activité CatInteraction
 @Composable
 fun CatBottomBar(
     onPlay: () -> Unit,
@@ -414,6 +420,7 @@ fun CatBottomBar(
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
+        // Bouton Jouer
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -436,13 +443,13 @@ fun CatBottomBar(
                 Text("Jouer", color = colorResource(R.color.black))
             }
         }
-
+        // Barre de séparation
         VerticalDivider(
             color = colorResource(R.color.black),
             thickness = 1.dp,
             modifier = Modifier.fillMaxHeight()
         )
-
+        // Bouton Laver
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -465,13 +472,13 @@ fun CatBottomBar(
                 Text("Laver", color = colorResource(R.color.black))
             }
         }
-
+        // Barre de séparation
         VerticalDivider(
             color = colorResource(R.color.black),
             thickness = 1.dp,
             modifier = Modifier.fillMaxHeight()
         )
-
+        // Bouton Caresser
         Box(
             modifier = Modifier
                 .weight(1f)

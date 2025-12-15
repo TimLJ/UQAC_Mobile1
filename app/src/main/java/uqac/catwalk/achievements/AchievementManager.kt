@@ -5,7 +5,6 @@ import android.util.Log
 import kotlinx.coroutines.flow.firstOrNull
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.PlayerData // Votre classe pour DataStore
-import uqac.catwalk.sauvegarde.updtXp
 
 
 object AchievementManager {
@@ -59,7 +58,7 @@ object AchievementManager {
         context: Context
     ) {
         if (res >= target) {
-            markAsObtenu(id, db, context)
+            markAsObtenu(id, db)
         }
     }
 
@@ -110,7 +109,7 @@ object AchievementManager {
     ) {
         Log.d(TAG, "checkAchatAchievement lancé")
         if (current >= target) {
-            markAsObtenu(id, db, context)
+            markAsObtenu(id, db)
         }
         else {
             Log.d(TAG, "checkAchatAchievement : Objectif $target et current $current  ")
@@ -163,7 +162,7 @@ object AchievementManager {
     ) {
         Log.d(TAG, "checkJeuAchievement lancé")
         if (res >= target) {
-            markAsObtenu(id, db, context)
+            markAsObtenu(id, db)
         }
         else {
             Log.d(TAG, "checkJeuAchievement : Objectif $target et current $res  ")
@@ -171,7 +170,7 @@ object AchievementManager {
     }
 
 
-    private suspend fun markAsObtenu(idAch: Int, db: AppDatabase, context: Context) {
+    private suspend fun markAsObtenu(idAch: Int, db: AppDatabase) {
         val achievement = db.AchievementDao().getAchievementByID(idAch)
         if (achievement != null && !achievement.obtenu) {
             // Met à jour le succès pour le marquer comme obtenu, mais pas encore réclamé

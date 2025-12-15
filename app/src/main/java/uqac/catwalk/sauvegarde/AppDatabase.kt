@@ -11,22 +11,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.dao.AchievementDao
 import uqac.catwalk.sauvegarde.dao.CatDao
-import uqac.catwalk.sauvegarde.dao.ItemDao
 import uqac.catwalk.sauvegarde.entities.Achievement
 import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.sauvegarde.entities.Converters
-import uqac.catwalk.sauvegarde.entities.Item
 import uqac.catwalk.sauvegarde.entities.Type
 
 @Database(
-    entities = [Cat::class, Item::class, Achievement::class],
+    entities = [Cat::class, Achievement::class],
     version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun CatDao(): CatDao
-    abstract fun ItemDao(): ItemDao
     abstract fun AchievementDao(): AchievementDao
 
     companion object {
@@ -77,17 +74,6 @@ abstract class AppDatabase : RoomDatabase() {
 
             )
             achievements.forEach { achievementDao.insert(it) }
-
-            // Pré-remplir les items
-            val itemDao = database.ItemDao()
-            val items = listOf(
-                Item(name = "Nourriture basique", price = 10.0, level = 1, unlock = listOf(1)),
-                Item(name = "Jouet souris", price = 15.0, level = 1, unlock = listOf(1)),
-                Item(name = "Brosse", price = 20.0, level = 1, unlock = listOf(2)),
-                Item(name = "Nourriture premium", price = 50.0, level = 2, unlock = listOf(3)),
-                Item(name = "Arbre à chat", price = 100.0, level = 3, unlock = listOf(5))
-            )
-            items.forEach { itemDao.insert(it) }
 
             // liste chat
             val catDao = database.CatDao()
