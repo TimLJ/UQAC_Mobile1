@@ -1,4 +1,4 @@
-package uqac.catwalk
+package uqac.catwalk.walk
 
 import android.Manifest
 import android.app.Activity
@@ -20,7 +20,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +39,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import uqac.catwalk.R
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 class WalkActivity : ComponentActivity() {
@@ -187,14 +187,8 @@ fun ProgressContent(
                 contentDescription = null,
                 modifier = Modifier.size(150.dp)
             )
-
-            LinearProgressIndicator(
-            progress = { ((uiState.progress / 2500.0).coerceIn(0.0, 1.0)).toFloat() },
-            modifier = Modifier.fillMaxWidth(),
-            color = ProgressIndicatorDefaults.linearColor,
-            trackColor = ProgressIndicatorDefaults.linearTrackColor,
-            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-            )
+            // barre de progression
+            StepProgressBar(progressMeters = uiState.progress.toFloat())
 
             Button(
                 onClick = {
@@ -207,6 +201,7 @@ fun ProgressContent(
                     (context as Activity).finish()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.red))
+
             ) {
                 Text("STOP")
             }

@@ -1,4 +1,4 @@
-package uqac.catwalk
+package uqac.catwalk.walk
 
 import android.content.Intent
 import android.os.Bundle
@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import uqac.catwalk.MainActivity
+import uqac.catwalk.R
 import uqac.catwalk.achievements.AchievementManager
 import uqac.catwalk.ui.theme.CatwalkTheme
 import uqac.catwalk.sauvegarde.updtMoney

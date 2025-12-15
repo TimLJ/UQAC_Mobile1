@@ -51,7 +51,7 @@ import uqac.catwalk.CatListActivity
 import uqac.catwalk.MainActivity
 import uqac.catwalk.R
 import uqac.catwalk.ShopActivity
-import uqac.catwalk.WalkActivity
+import uqac.catwalk.walk.WalkActivity
 import uqac.catwalk.sauvegarde.PlayerData
 
 // Top bar for every screen that is not the main screen

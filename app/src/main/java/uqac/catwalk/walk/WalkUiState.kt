@@ -1,4 +1,4 @@
-package uqac.catwalk
+package uqac.catwalk.walk
 
 import android.location.Location
 
