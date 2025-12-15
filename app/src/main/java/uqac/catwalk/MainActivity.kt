@@ -413,7 +413,10 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
         )
         Button(
             onClick = {
-                Log.d("Button","Bouton clické")
+                val intent =
+                    Intent(context, CatInteractionActivity::class.java)
+                intent.putExtra("catID", cat.id)
+                context.startActivity(intent)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent
@@ -442,27 +445,6 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
                         .size(20.dp)
                 )
             }
-        }
-        Button(
-            onClick = {
-                val intent =
-                    Intent(context, CatInteractionActivity::class.java)
-                intent.putExtra("catID", cat.id)
-                context.startActivity(intent)
-            },
-            border = BorderStroke(4.dp, MaterialTheme.colorScheme.onSecondary),
-            modifier = Modifier
-                .alpha(1f)
-                .offset(y = -30.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-            enabled = true
-        ) {
-            Text(
-                text = "Voir",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 1f)
-            )
         }
     }
 }
