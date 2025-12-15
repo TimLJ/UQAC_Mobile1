@@ -69,10 +69,13 @@ fun AppTopBar(
     ) {
 
         // Bouton Home
-        IconButton(
+        Button(
             onClick = {
                 context.startActivity(Intent(context, MainActivity::class.java))
-            }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(R.color.light_blue)
+            ),
         ) {
             Icon(
                 imageVector = Icons.Filled.Home,
@@ -90,20 +93,16 @@ fun AppTopBar(
             Icon(
                 imageVector = Icons.Filled.Star,
                 contentDescription = "Succès",
-                tint = colorResource(R.color.orange)
+                tint = colorResource(R.color.orange),
+                modifier = Modifier.size(40.dp)
             )
         }
 
-        // Barre d’XP (prend l’espace central)
-        Button(
-            onClick = {
-                context.startActivity(Intent(context, AchievementsActivity::class.java))
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues(0.dp),
+        // Barre d’experience
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .height(48.dp)
+                .weight(4f)
+                .height(100.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -118,7 +117,7 @@ fun AppTopBar(
                 Image(
                     painter = painterResource(R.drawable.lvl1),
                     contentDescription = "Niveau",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(50.dp)
                         .align(Alignment.CenterStart)
 
                 )
@@ -133,18 +132,18 @@ fun AppTopBar(
         ) {
             Text(
                 text = player.money.toString(),
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 modifier = Modifier
-                    .padding(start = 24.dp)
+                    .padding(start = 30.dp)
                     .border(2.dp, colorResource(R.color.orange))
                     .background(colorResource(R.color.white))
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
             )
 
             Image(
                 painter = painterResource(R.drawable.paw_coin),
                 contentDescription = "Pièce",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
     }
@@ -166,14 +165,12 @@ fun MainTopBar(
     ) {
 
         // Bouton succès
-        Button(
+        IconButton(
             onClick = {
                 context.startActivity(
                     Intent(context, AchievementsActivity::class.java)
                 )
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues(0.dp),
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
@@ -181,8 +178,8 @@ fun MainTopBar(
             Icon(
                 imageVector = Icons.Filled.Star,
                 contentDescription = "Succès",
-                tint = Color.White,
-                modifier = Modifier.size(30.dp)
+                tint = colorResource(R.color.orange),
+                modifier = Modifier.size(40.dp)
             )
         }
 
