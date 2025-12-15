@@ -77,11 +77,7 @@ class MainActivity : ComponentActivity() {
             // 4. Une fois les données chargées, on peut construire l'UI
             setContent {
                 CatwalkTheme {
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        MainContent(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                    MainContent()
                 }
             }
         }
