@@ -65,7 +65,6 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
     val context = LocalContext.current
     val distance = intent.getDoubleExtra("progress", 0.0)
     val coroutineScope = rememberCoroutineScope()
-    val affection = (distance / 2500).toInt() * 0.3
     val pieces = (distance / 50).toInt()
 
 
@@ -101,15 +100,6 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
             color = MaterialTheme.colorScheme.secondary
         )
 
-        // Affection du chat
-        //Text(
-        //    text = "Affection gagnée : ${String.format("%.0f",affection)} coeur",
-        //    fontSize = 24.sp,
-        //    style = MaterialTheme.typography.headlineSmall,
-        //    color = MaterialTheme.colorScheme.tertiary
-        //)
-        //A ajouter quand on poura définir un chat comme favori pour la balade
-
         // Bouton de retour
         Button(
             onClick = {
@@ -119,7 +109,6 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
                     CoroutineScope(Dispatchers.IO).launch {
                         AchievementManager.checkAchievementsAfterWalk(context,distance.toInt())
                     }
-                    //ajouter l'affection du chat
                     val intent = Intent(context, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                     context.startActivity(intent)
