@@ -12,16 +12,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -116,7 +121,8 @@ fun AppTopBar(
                 Image(
                     painter = painterResource(R.drawable.lvl1),
                     contentDescription = "Niveau",
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier
+                        .size(50.dp)
                         .align(Alignment.CenterStart)
 
                 )
@@ -355,6 +361,106 @@ fun AppBottomBar(
                             .offset(y = -2.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+// Bottom bar specific to the cat interaction screen containing buttons to play, wash, or pet the cat
+@Composable
+fun CatBottomBar(
+    onPlay: () -> Unit,
+    onWash: () -> Unit,
+    onPet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .height(100.dp)
+            .background(colorResource(R.color.light_yellow))
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable {
+                    onPlay()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Jouer",
+                    tint = colorResource(R.color.black)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Jouer", color = colorResource(R.color.black))
+            }
+        }
+
+        VerticalDivider(
+            color = colorResource(R.color.black),
+            thickness = 1.dp,
+            modifier = Modifier.fillMaxHeight()
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable {
+                    onWash()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = "Laver",
+                    tint = colorResource(R.color.black)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Laver", color = colorResource(R.color.black))
+            }
+        }
+
+        VerticalDivider(
+            color = colorResource(R.color.black),
+            thickness = 1.dp,
+            modifier = Modifier.fillMaxHeight()
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clickable {
+                    onPet()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.FavoriteBorder,
+                    contentDescription = "Caresser",
+                    tint = colorResource(R.color.black)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Caresser", color = colorResource(R.color.black))
             }
         }
     }

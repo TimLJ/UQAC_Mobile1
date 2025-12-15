@@ -9,15 +9,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
@@ -39,7 +35,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -49,6 +44,7 @@ import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.animation.CongratsDialog
 import uqac.catwalk.ui.bar.AppTopBar
+import uqac.catwalk.ui.bar.CatBottomBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 
 data class Heart(val id: Long, val x: Float, val y: Float)
@@ -218,103 +214,23 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             )
         },
         bottomBar = {
-            // Barre d'actions placée dans bottomBar pour que Scaffold réserve l'espace correctement
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .height(100.dp)
-                    .background(colorResource(R.color.orange))
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isPlaying = true
-                            isWashing = false
-                            isPetting = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Jouer",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Jouer", color = colorResource(R.color.black))
-                    }
+            CatBottomBar(
+                onPlay = {
+                    isPlaying = true
+                    isWashing = false
+                    isPetting = false
+                },
+                onWash = {
+                    isWashing = true
+                    isPetting = false
+                    isPlaying = false
+                },
+                onPet = {
+                    isPetting = true
+                    isWashing = false
+                    isPlaying = false
                 }
-
-                VerticalDivider(
-                    color = colorResource(R.color.black),
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxHeight()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isWashing = true
-                            isPetting = false
-                            isPlaying = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Laver",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Laver", color = colorResource(R.color.black))
-                    }
-                }
-
-                VerticalDivider(
-                    color = colorResource(R.color.black),
-                    thickness = 1.dp,
-                    modifier = Modifier.fillMaxHeight()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable {
-                            isPetting = true
-                            isWashing = false
-                            isPlaying = false
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.FavoriteBorder,
-                            contentDescription = "Caresser",
-                            tint = colorResource(R.color.black)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Caresser", color = colorResource(R.color.black))
-                    }
-                }
-            }
+            )
         }
     ) { paddingValues ->
         Box(
