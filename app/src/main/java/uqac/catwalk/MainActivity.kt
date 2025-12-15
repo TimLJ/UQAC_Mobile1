@@ -65,16 +65,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Créer une instance de votre DataStoreManager
+        // Crée une instance de DataStoreManager
         val dataStoreManager = DataStoreManager(applicationContext)
 
-        // 2. Lancer une coroutine pour charger les données de manière asynchrone
+        // Lance une coroutine pour charger les données de manière asynchrone
         // On utilise lifecycleScope car onCreate n'est pas un composable
         lifecycleScope.launch {
-            // 3. APPELER LA FONCTION ICI !
             dataStoreManager.loadPlayerData()
 
-            // 4. Une fois les données chargées, on peut construire l'UI
+            // Une fois les données chargées, on peut construire l'UI
             setContent {
                 CatwalkTheme {
                     MainContent()
@@ -210,6 +209,7 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
                 .alpha(1f)
                 .offset(y = 40.dp)
         )
+        // Cat image button
         Button(
             onClick = {
                 val intent =
@@ -228,6 +228,7 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
                 contentDescription = "Chat blanc et noir qui dort.",
             )
         }
+        // Affection hearts
         Row(
             modifier = Modifier
                 .offset(y = -30.dp)
