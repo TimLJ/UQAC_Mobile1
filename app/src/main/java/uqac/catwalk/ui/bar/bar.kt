@@ -9,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -231,14 +230,7 @@ fun MainTopBar(
         }
 
         // Barre d'expérience
-        Button(
-            onClick = {
-                context.startActivity(
-                    Intent(context, AchievementsActivity::class.java)
-                )
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues(0.dp),
+        Box(
             modifier = Modifier
                 .weight(3f)
                 .height(70.dp)
