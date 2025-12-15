@@ -164,7 +164,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = achievement.name,
-                                                textAlign = TextAlign.Center,
+                                                textAlign = TextAlign.Left,
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -181,7 +181,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                                                 achievement.débloqué -> "🔓 Disponible"
                                                 else -> "🔒 Verrouillé"
                                             },
-                                            textAlign = TextAlign.Center,
+                                            textAlign = TextAlign.Left,
                                             color = when {
                                                 achievement.obtenu -> Color.Green
                                                 achievement.débloqué -> Color.White
