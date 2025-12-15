@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -425,10 +424,10 @@ fun CatBottomBar(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
+                Image(
+                    painter = painterResource(R.drawable.laver_icon),
                     contentDescription = "Laver",
-                    tint = colorResource(R.color.black)
+                    modifier = Modifier.size(25.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text("Laver", color = colorResource(R.color.black))
