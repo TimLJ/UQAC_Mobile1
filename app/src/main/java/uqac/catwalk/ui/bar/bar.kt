@@ -48,7 +48,6 @@ import uqac.catwalk.MainActivity
 import uqac.catwalk.R
 import uqac.catwalk.ShopActivity
 import uqac.catwalk.WalkActivity
-import uqac.catwalk.sauvegarde.MsMoney
 import uqac.catwalk.sauvegarde.PlayerData
 
 // Top bar for every screen that is not the main screen
@@ -156,6 +155,9 @@ fun MainTopBar(
     context: Context,
     modifier: Modifier = Modifier
 ) {
+
+    val player = PlayerData
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -224,7 +226,7 @@ fun MainTopBar(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
-                    text = MsMoney.toString(),
+                    text = player.money.toString(),
                     fontSize = 22.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
