@@ -63,6 +63,26 @@ fun AppTopBar(
     val context = LocalContext.current
     val player = PlayerData
 
+    var expDrawable = if (player.Xp < 25) {
+        R.drawable.exp_bar
+    } else if (player.Xp >= 25 && player.Xp < 50) {
+        R.drawable.exp_bar1
+    } else if (player.Xp >= 50 && player.Xp < 75) {
+        R.drawable.exp_bar2
+    } else {
+        R.drawable.exp_bar3
+    }
+
+    var lvlDrawable = if (player.Lv == 1) {
+        R.drawable.lvl1
+    } else if (player.Lv == 2) {
+        R.drawable.lvl2
+    } else if (player.Lv == 3) {
+        R.drawable.lvl3
+    } else {
+        R.drawable.lvl4
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -113,13 +133,13 @@ fun AppTopBar(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(R.drawable.exp_bar),
+                    painter = painterResource(expDrawable),
                     contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxSize()
                 )
                 Image(
-                    painter = painterResource(R.drawable.lvl1),
+                    painter = painterResource(lvlDrawable),
                     contentDescription = "Niveau",
                     modifier = Modifier
                         .size(50.dp)
@@ -163,6 +183,26 @@ fun MainTopBar(
 ) {
 
     val player = PlayerData
+
+    var expDrawable = if (player.Xp < 25) {
+        R.drawable.exp_bar
+    } else if (player.Xp >= 25 && player.Xp < 50) {
+        R.drawable.exp_bar1
+    } else if (player.Xp >= 50 && player.Xp < 75) {
+        R.drawable.exp_bar2
+    } else {
+        R.drawable.exp_bar3
+    }
+
+    var lvlDrawable = if (player.Lv == 1) {
+        R.drawable.lvl1
+    } else if (player.Lv == 2) {
+        R.drawable.lvl2
+    } else if (player.Lv == 3) {
+        R.drawable.lvl3
+    } else {
+        R.drawable.lvl4
+    }
 
     Row(
         modifier = modifier
@@ -209,13 +249,13 @@ fun MainTopBar(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(R.drawable.exp_bar),
+                    painter = painterResource(expDrawable),
                     contentDescription = "Barre d'expérience",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxSize()
                 )
                 Image(
-                    painter = painterResource(R.drawable.lvl1),
+                    painter = painterResource(lvlDrawable),
                     contentDescription = "Niveau 1",
                     modifier = Modifier
                         .size(60.dp)

@@ -32,13 +32,13 @@ object AchievementManager {
                     context = context
                 )
 
-                "Marathonien" -> checkBalladeAchievement(
-                    achievement.id,
-                    achievement.objectif,
-                    PlayerData.DDistance,
-                    db,
-                    context = context
-                )
+//                "Marathonien" -> checkBalladeAchievement(
+//                    achievement.id,
+//                    achievement.objectif,
+//                    PlayerData.DDistance,
+//                    db,
+//                    context = context
+//                )
 
                 "Usain Bolt ?" -> checkBalladeAchievement(
                     achievement.id,

@@ -65,15 +65,15 @@ abstract class AppDatabase : RoomDatabase() {
             // Pré-remplir les achievements
             val achievementDao = database.AchievementDao()
             val achievements = listOf(
-                Achievement(name = "Premier pas", description = "Adopter votre premier chat", type = Type.AchatChat, objectif = 3, reward = 10),
-                Achievement(name = "Collectionneur", description = "Adopter 5 chats", type = Type.AchatChat, objectif = 5, reward = 25),
-                Achievement(name = "Amoureux des chats", description = "Adopter 10 chats", type = Type.AchatChat, objectif = 10, reward = 50),
-                Achievement(name = "Roi du bonheur", description = "Atteindre 100 de bonheur sur tous les chats" , type = Type.FinChat, reward = 20),
-                Achievement(name = "Propre comme un sou neuf", description = "Atteindre 100 de propreté sur tous les chats", type = Type.FinChat, reward = 20),
-                Achievement(name = "Marcheur", description = "Faire une ballade de 1000 mètres", type = Type.FinBallade, objectif = 1000, reward = 10),
-                Achievement(name = "Grand Marcheur", description = "Faire une ballade de 5000 mètres", type = Type.FinBallade, objectif = 5000, reward = 10),
-                Achievement(name = "Marathonien", description = "Marcher un marathon en une journée", type = Type.FinBallade, objectif = 42195, reward = 200),
-                Achievement(name = "Usain Bolt ?", description = "Parcourir 100 mètres au total", type = Type.FinBallade, objectif = 100, reward = 15),
+                Achievement(name = "Premier pas", description = "Adopter votre premier chat", type = Type.AchatChat, objectif = 3, reward = 25),
+                Achievement(name = "Collectionneur", description = "Adopter 3 chats", type = Type.AchatChat, objectif = 5, reward = 50),
+                Achievement(name = "Amoureux des chats", description = "Adopter 7 chats", type = Type.AchatChat, objectif = 7, reward = 0),
+                Achievement(name = "Roi du bonheur", description = "Atteindre 100 de bonheur sur tous les chats" , type = Type.FinChat, reward = 25),
+                Achievement(name = "Propre comme un sou neuf", description = "Atteindre 100 de propreté sur tous les chats", type = Type.FinChat, reward = 25),
+                Achievement(name = "Marcheur", description = "Faire une ballade de 1000 mètres", type = Type.FinBallade, objectif = 1000, reward = 50),
+                Achievement(name = "Grand Marcheur", description = "Faire une ballade de 3000 mètres", type = Type.FinBallade, objectif = 3000, reward = 75),
+                //Achievement(name = "Marathonien", description = "Marcher un marathon en une journée", type = Type.FinBallade, objectif = 42195, reward = 200),
+                Achievement(name = "Usain Bolt ?", description = "Parcourir 100 mètres au total", type = Type.FinBallade, objectif = 100, reward = 50),
 
             )
             achievements.forEach { achievementDao.insert(it) }
