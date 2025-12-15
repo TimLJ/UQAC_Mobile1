@@ -62,4 +62,16 @@ interface CatDao {
     suspend fun updateCatObtenu(id: Int, obtenu: Boolean)
     @Query("SELECT * FROM cats WHERE name = :name")
     suspend fun getByName(name: String): Cat
+
+    @Query("SELECT COUNT(*) FROM cats WHERE obtenu = 1")
+    suspend fun getOwnedCatsCount(): Int
+
+    @Query("Select Count(*) from cats where cleanliness = 300")
+    suspend fun getCleanCatsCount(): Int
+
+    @Query("Select Count(*) from cats where happiness = 300")
+    suspend fun getHappyCatsCount(): Int
+
+
+
 }

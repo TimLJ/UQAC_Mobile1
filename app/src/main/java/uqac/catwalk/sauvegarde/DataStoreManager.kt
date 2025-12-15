@@ -22,7 +22,7 @@ class DataStoreManager(private val context: Context) {
         val PLAYER_LV_KEY = intPreferencesKey("player_lv")
         val PLAYER_XP_KEY = intPreferencesKey("player_xp")
         val PLAYER_MONEY_KEY = intPreferencesKey("player_money")
-        val PLAYER_TOTAL_DISTANCE_KEY = longPreferencesKey("player_total_distance")
+        val PLAYER_TOTAL_DISTANCE_KEY = intPreferencesKey("player_total_distance")
         val PLAYER_DAILY_DISTANCE_KEY = intPreferencesKey("player_daily_distance")
     }
 
@@ -46,7 +46,7 @@ class DataStoreManager(private val context: Context) {
             Lv = preferences[PLAYER_LV_KEY] ?: 1
             Xp = preferences[PLAYER_XP_KEY] ?: 0
             money = preferences[PLAYER_MONEY_KEY] ?: 100
-            TDistance = preferences[PLAYER_TOTAL_DISTANCE_KEY] ?: 0L
+            TDistance = preferences[PLAYER_TOTAL_DISTANCE_KEY] ?: 0
             DDistance = preferences[PLAYER_DAILY_DISTANCE_KEY] ?: 0
         }
     }

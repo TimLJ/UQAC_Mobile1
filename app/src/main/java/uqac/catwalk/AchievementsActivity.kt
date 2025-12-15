@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,7 +42,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.updtXp
 import uqac.catwalk.ui.bar.AppBottomBar
 import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
@@ -68,6 +73,8 @@ fun LvContent(modifier: Modifier = Modifier) {
     val database = AppDatabase.getDatabase(context = context)
     val AchievementDao = database.AchievementDao()
     val achievements by AchievementDao.getAllAchievements().collectAsState(initial = emptyList())
+    val coroutineScope = rememberCoroutineScope()
+
 //    val levels = listOf(
 //        "Niveau 1 - Débutant", "Niveau 2 - Novice", "Niveau 3 - Apprenti",
 //        "Niveau 4 - Intermédiaire", "Niveau 5 - Avancé", "Niveau 6 - Expert",
@@ -134,7 +141,17 @@ fun LvContent(modifier: Modifier = Modifier) {
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                    Row(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable{
+                                            if (!achievement.obtenu && achievement.débloqué) {
+                                                coroutineScope.launch(Dispatchers.IO) {
+                                                    AchievementDao.claim(achievement.id)
+                                                    updtXp(achievement.reward, context)
+                                                }
+                                            }
+                                        }
+                                    ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = achievement.name,
