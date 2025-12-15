@@ -1,10 +1,12 @@
 package uqac.catwalk
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,10 +20,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +71,7 @@ class AchievementsActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("ResourceAsColor")
 @Composable
 fun LvContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -141,21 +147,24 @@ fun LvContent(modifier: Modifier = Modifier) {
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Row(modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable{
-                                            if (!achievement.obtenu && achievement.débloqué) {
-                                                coroutineScope.launch(Dispatchers.IO) {
-                                                    AchievementDao.claim(achievement.id)
-                                                    updtXp(achievement.reward, context)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 10.dp, end = 10.dp)
+                                            .clickable{
+                                                if (!achievement.obtenu && achievement.débloqué) {
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        AchievementDao.claim(achievement.id)
+                                                        updtXp(achievement.reward, context)
+                                                    }
                                                 }
                                             }
-                                        }
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = achievement.name,
-                                                textAlign = TextAlign.Center,
+                                                textAlign = TextAlign.Left,
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -163,7 +172,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                                             )
                                             Text(
                                                 text = achievement.description,
-                                                textAlign = TextAlign.Center,
+                                                textAlign = TextAlign.Left,
                                             )
                                         }
                                         Text(
@@ -172,13 +181,21 @@ fun LvContent(modifier: Modifier = Modifier) {
                                                 achievement.débloqué -> "🔓 Disponible"
                                                 else -> "🔒 Verrouillé"
                                             },
-                                            textAlign = TextAlign.Center,
+                                            textAlign = TextAlign.Left,
                                             color = when {
                                                 achievement.obtenu -> Color.Green
-                                                achievement.débloqué -> Color.Blue
-                                                else -> Color.Gray
+                                                achievement.débloqué -> Color.White
+                                                else -> MaterialTheme.colorScheme.onPrimary
                                             },
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier
+                                                .background(
+                                                    color = Color(R.color.purple_500),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .height(50.dp)
+                                                .wrapContentHeight(Alignment.CenterVertically)
+                                                .padding(start = 5.dp, end = 5.dp)
                                         )
                                     }
                                 }

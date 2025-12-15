@@ -29,8 +29,8 @@ suspend fun updtXp(xp: Int, context: Context) {
     var newLevel = PlayerData.Lv
     var remainingXp = newXp
 
-    while (remainingXp >= xPReq(newLevel)) {
-        remainingXp -= xPReq(newLevel)
+    while (remainingXp >= xPReq()) {
+        remainingXp -= xPReq()
         newLevel++
     }
     PlayerData.Xp = remainingXp
@@ -43,8 +43,8 @@ suspend fun updtXp(xp: Int, context: Context) {
 
 }
 
-private fun xPReq(level: Int): Int {
-    return (0.5 * (level + 1).toDouble().pow(3)).toInt()
+private fun xPReq(): Int {
+    return 100
 }
 
 suspend fun updtMoney(money: Int, context: Context) {
