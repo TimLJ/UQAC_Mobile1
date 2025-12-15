@@ -4,23 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -30,49 +22,39 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import uqac.catwalk.sauvegarde.PlayerData
-import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.ui.theme.CatwalkTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.DataStoreManager
-import uqac.catwalk.sauvegarde.MsMoney
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.res.colorResource
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
+import uqac.catwalk.ui.bar.AppBottomBar
+import uqac.catwalk.ui.bar.MainTopBar
 
 data class Coords (
     val x: Dp,
@@ -200,9 +182,9 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
 
     // All cats sleeping colors:
     val catColors = mapOf(
-        1 to R.drawable.chat_blanc_noir_dodo,
-        2 to R.drawable.chat_gris_dodo,
-        3 to R.drawable.chat_roux_dodo
+        1 to R.drawable.chat_blanc_noir_endormi,
+        2 to R.drawable.chat_gris_endormi,
+        3 to R.drawable.chat_roux_endormi
     )
 
     var affection by remember { mutableStateOf(cat.affection) }
@@ -236,7 +218,7 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
                 .size(120.dp)
         ) {
             Image(
-                painter = painterResource(catColors[cat.id] ?: R.drawable.chat_blanc_noir_dodo) ,
+                painter = painterResource(catColors[cat.id] ?: R.drawable.chat_blanc_noir_endormi) ,
                 contentDescription = "Chat blanc et noir qui dort.",
             )
         }
