@@ -66,6 +66,7 @@ import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
 import uqac.catwalk.achievements.AchievementManager
 
+// Représente un chat dans la boutique
 data class ShopCat(val name: String, val color: String, val price: Double, val level: Int)
 
 class ShopActivity : ComponentActivity() {
@@ -86,6 +87,7 @@ class ShopActivity : ComponentActivity() {
 
 @Composable
 fun ShopContent(modifier: Modifier = Modifier) {
+    // Contexte pour accéder aux ressources et à la BDD
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context = context)
     val catDao = database.CatDao()
@@ -222,7 +224,7 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                             )
                                         }
                                     }
-
+                                    // Bouton d'achat
                                     Button(
                                         onClick = {
                                             if (!canBuy) {

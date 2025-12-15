@@ -45,6 +45,7 @@ class EndWalkActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Récupère l'intent avec les données de la marche
         setContent {
             CatwalkTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -66,9 +67,6 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
     val distance = intent.getDoubleExtra("progress", 0.0)
     val coroutineScope = rememberCoroutineScope()
     val pieces = (distance / 50).toInt()
-
-
-
 
     Column(
         modifier = modifier

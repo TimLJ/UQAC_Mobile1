@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import uqac.catwalk.sauvegarde.PlayerData
 import uqac.catwalk.ui.theme.CatwalkTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -89,15 +88,17 @@ class MainActivity : ComponentActivity() {
 fun MainContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    val Player by remember { mutableStateOf(PlayerData) }
 
+    // Get unlocked cats from database
     val database = AppDatabase.getDatabase(context = context)
     val catDao = database.CatDao()
     val cats by catDao.getDebloques().collectAsState(initial = emptyList())
 
+    // For centering the image
     var imageWidth by remember { mutableStateOf(0) }
     var containerWidth by remember { mutableStateOf(0) }
 
+    // Center the image if it's larger than the container
     LaunchedEffect(imageWidth, containerWidth) {
         if (imageWidth > containerWidth) {
             val overflow = imageWidth - containerWidth
@@ -114,7 +115,6 @@ fun MainContent(modifier: Modifier = Modifier) {
                     .height(80.dp)
             )
         },
-
         content = { paddingValues ->
             Box(
                 modifier = modifier
@@ -125,6 +125,7 @@ fun MainContent(modifier: Modifier = Modifier) {
                     }
                     .horizontalScroll(scrollState)
             ) {
+                // Background
                 Image(
                     painter = painterResource(R.drawable.background),
                     contentDescription = "Image de prairie avec une rivière, un moulin, et des oiseaux dans le ciel.",
@@ -135,14 +136,14 @@ fun MainContent(modifier: Modifier = Modifier) {
                             imageWidth = coords.size.width
                         }
                 )
-
+                // Floor
                 Image(
                     painter = painterResource(R.drawable.floor),
                     contentDescription = "Image d'un plancher.",
                     modifier = Modifier
                         .padding(start = 100.dp, top = 80.dp)
                 )
-
+                // House with cat ears
                 Image(
                     painter = painterResource(R.drawable.house),
                     contentDescription = "Image d'une maison avec des oreilles de chat.",

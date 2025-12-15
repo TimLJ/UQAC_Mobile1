@@ -67,6 +67,7 @@ class CatListActivity : ComponentActivity() {
 fun CatContent(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
+    // Accès à la base de données et récupération des chats débloqués
     val database = AppDatabase.getDatabase(context = context)
     val catDao = database.CatDao()
     val cats by catDao.getDebloques().collectAsState(initial = emptyList())

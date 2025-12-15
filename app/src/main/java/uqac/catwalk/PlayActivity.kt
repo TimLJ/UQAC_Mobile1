@@ -29,6 +29,7 @@ class PlayActivity : ComponentActivity() {
     }
 }
 
+// UI Composable pour l'activité de jeu
 @Composable
 fun PlayContent(modifier: Modifier = Modifier) {
     Text(

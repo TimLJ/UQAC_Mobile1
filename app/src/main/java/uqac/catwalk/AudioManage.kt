@@ -21,6 +21,7 @@ object SoundPlayer {
             return
         }
 
+        // Synchronisation pour éviter les conflits d'accès
         synchronized(this) {
             if (player?.isPlaying == true && currentResId == resId) {
                 Log.d(TAG, "start: same sound already playing resId=$resId")
@@ -36,6 +37,7 @@ object SoundPlayer {
             currentResId = 0
 
             try {
+                // Crée et démarre un nouveau player
                 player = MediaPlayer.create(appCtx, resId)?.apply {
                     isLooping = loop
                     setVolume(1f, 1f)
@@ -51,6 +53,7 @@ object SoundPlayer {
                     start()
                 }
 
+                // Met à jour l'état actuel
                 if (player != null) {
                     currentResId = resId
                     Log.d(TAG, "start: started resId=$resId loop=$loop")
