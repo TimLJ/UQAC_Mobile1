@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import uqac.catwalk.sauvegarde.AppDatabase
+import uqac.catwalk.sauvegarde.updtXp
 import uqac.catwalk.ui.bar.AppBottomBar
 import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
@@ -146,6 +147,7 @@ fun LvContent(modifier: Modifier = Modifier) {
                                             if (!achievement.obtenu && achievement.débloqué) {
                                                 coroutineScope.launch(Dispatchers.IO) {
                                                     AchievementDao.claim(achievement.id)
+                                                    updtXp(achievement.reward, context)
                                                 }
                                             }
                                         }

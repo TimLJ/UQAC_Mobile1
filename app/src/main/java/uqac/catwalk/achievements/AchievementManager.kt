@@ -176,7 +176,6 @@ object AchievementManager {
         if (achievement != null && !achievement.obtenu) {
             // Met à jour le succès pour le marquer comme obtenu, mais pas encore réclamé
             db.AchievementDao().accomplished(achievement.id)
-            updtXp(achievement.reward, context)
 
             //Msg de log
             Log.d(TAG, "Succès obtenu : ${achievement.name}")
