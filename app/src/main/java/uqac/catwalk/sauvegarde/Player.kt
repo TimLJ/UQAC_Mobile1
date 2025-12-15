@@ -1,6 +1,7 @@
 package uqac.catwalk.sauvegarde
 
 import android.content.Context
+import android.util.Log
 import kotlin.math.pow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,7 +13,7 @@ object PlayerData {
     var Lv: Int = 1
     var Xp: Int = 0
     var money: Int = 100
-    var TDistance: Long = 0L
+    var TDistance: Int = 0
     var DDistance: Int = 0
 }
 
@@ -23,6 +24,7 @@ public var MsMoney by mutableStateOf(PlayerData.money)
 // Les fonctions de mise à jour doivent être suspendues
 // pour appeler des fonctions de sauvegarde asynchrones.
 suspend fun updtXp(xp: Int, context: Context) {
+    Log.d("AchievementManager", "updtXp lancé, initialement ${PlayerData.Xp}. Ajout de $xp.")
     val newXp = PlayerData.Xp + xp
     var newLevel = PlayerData.Lv
     var remainingXp = newXp
@@ -37,6 +39,8 @@ suspend fun updtXp(xp: Int, context: Context) {
     // Sauvegarder les nouvelles données
     val dataStoreManager = DataStoreManager(context)
     dataStoreManager.savePlayerData(PlayerData)
+    Log.d("AchievementManager", "updtXp terminé, Xp: ${PlayerData.Xp}, Niveau: ${PlayerData.Lv}")
+
 }
 
 private fun xPReq(level: Int): Int {

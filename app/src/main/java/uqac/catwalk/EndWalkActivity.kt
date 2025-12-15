@@ -30,8 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import uqac.catwalk.achievements.AchievementManager
 import uqac.catwalk.ui.theme.CatwalkTheme
 import uqac.catwalk.sauvegarde.updtMoney
 import uqac.catwalk.sauvegarde.addDistance
@@ -112,6 +115,9 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
                 coroutineScope.launch {
                     addDistance(distance.toInt(), context)
                     updtMoney(pieces, context)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        AchievementManager.checkAchievementsAfterWalk(context,distance.toInt())
+                    }
                     //ajouter l'affection du chat
                     val intent = Intent(context, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK

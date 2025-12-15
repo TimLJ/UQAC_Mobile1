@@ -1,6 +1,7 @@
 package uqac.catwalk
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -63,6 +64,7 @@ import uqac.catwalk.sauvegarde.entities.Cat
 import uqac.catwalk.ui.bar.AppBottomBar
 import uqac.catwalk.ui.bar.AppTopBar
 import uqac.catwalk.ui.theme.CatwalkTheme
+import uqac.catwalk.achievements.AchievementManager
 
 data class ShopCat(val name: String, val color: String, val price: Double, val level: Int)
 
@@ -249,6 +251,13 @@ fun ShopContent(modifier: Modifier = Modifier) {
                                             }
 
                                             Toast.makeText(context, "${shopCat.name} acheté !", Toast.LENGTH_SHORT).show()
+
+                                            //gestion des achievements
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                Log.d("AchievementManager", "Lancement de checkAchievementsAfterBuy")
+                                                AchievementManager.checkAchievementsAfterBuy(context)
+                                            }
+
                                         },
                                         enabled = canBuy,
                                         modifier = Modifier

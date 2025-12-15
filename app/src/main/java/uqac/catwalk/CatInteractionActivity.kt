@@ -41,9 +41,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import uqac.catwalk.achievements.AchievementManager
 import kotlin.math.max
 import uqac.catwalk.sauvegarde.AppDatabase
 import uqac.catwalk.sauvegarde.entities.Cat
@@ -176,18 +178,20 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             (prevProprete < 290 && proprete >= 290) ||
                     (prevAmusement < 290 && amusement >= 290)
 
-        if (cleaned && played && !congratsShownForSession && reachedByIncrease) {
-            congratsShownForSession = true
-            showCongratsDialog = true
+        if (cleaned && played && reachedByIncrease) {
+            if (!congratsShownForSession){
+                congratsShownForSession = true
+                showCongratsDialog = true
 
-            val newAff = (affection + 0.1f).coerceIn(0f, 0.1f)
-            affection = newAff
-            scope.launch(Dispatchers.IO) {
-                catDao.updateCatAffectionAndLastSeen(
-                    cat.id,
-                    newAff,
-                    System.currentTimeMillis()
-                )
+                val newAff = (affection + 0.1f).coerceIn(0f, 0.1f)
+                affection = newAff
+                scope.launch(Dispatchers.IO) {
+                    catDao.updateCatAffectionAndLastSeen(
+                        cat.id,
+                        newAff,
+                        System.currentTimeMillis()
+                    )
+                }
             }
         }
 
@@ -195,8 +199,10 @@ fun CatInteractionContent(modifier: Modifier = Modifier, cat: Cat) {
             congratsShownForSession = false
         }
 
+
         prevProprete = proprete
         prevAmusement = amusement
+
     }
 
 
@@ -721,6 +727,9 @@ fun InteractionOverlay(
             onClick = {
                 if (isSoundPlaying) {
                     SoundPlayer.stop()
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    AchievementManager.checkAchievementsAfterCare(context)
                 }
                 onClose()
             },
