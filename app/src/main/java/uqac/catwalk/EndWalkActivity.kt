@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import uqac.catwalk.achievements.AchievementManager
 import uqac.catwalk.ui.theme.CatwalkTheme
@@ -79,7 +78,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = "Résumé de la ballade",
+            text = "Résumé de la balade",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -107,7 +106,7 @@ fun WalkContent(modifier: Modifier = Modifier, intent:  Intent) {
         //    style = MaterialTheme.typography.headlineSmall,
         //    color = MaterialTheme.colorScheme.tertiary
         //)
-        //A ajouter quand on poura définir un chat comme favori pour la ballade
+        //A ajouter quand on poura définir un chat comme favori pour la balade
 
         // Bouton de retour
         Button(
