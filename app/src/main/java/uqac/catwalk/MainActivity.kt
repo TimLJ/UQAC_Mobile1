@@ -177,14 +177,24 @@ fun SleepyCat(modifier: Modifier = Modifier, context: Context, cat: Cat) {
     val catCoords = mapOf(
         1 to Coords(60.dp, 350.dp),
         2 to Coords(300.dp, 380.dp),
-        3 to Coords(400.dp, 180.dp)
+        3 to Coords(400.dp, 180.dp),
+        4 to Coords(20.dp, 250.dp),
+        5 to Coords(180.dp, 410.dp),
+        6 to Coords(220.dp, 60.dp),
+        7 to Coords(440.dp, 380.dp),
+        8 to Coords(400.dp, 280.dp),
     )
 
     // All cats sleeping colors:
     val catColors = mapOf(
         1 to R.drawable.chat_blanc_noir_endormi,
         2 to R.drawable.chat_gris_endormi,
-        3 to R.drawable.chat_roux_endormi
+        3 to R.drawable.chat_roux_endormi,
+        4 to R.drawable.chat_blanc_endormi,
+        5 to R.drawable.chat_noir_endormi,
+        6 to R.drawable.chat_tricolore_endormi,
+        7 to R.drawable.chat_roux_endormi,
+        8 to R.drawable.chat_blanc_noir_endormi
     )
 
     var affection by remember { mutableStateOf(cat.affection) }
